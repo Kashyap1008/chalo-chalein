@@ -77,3 +77,26 @@ class LogoutView(APIView):
                 {"detail": "Invalid token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class StatsView(APIView):
+    """Analytics/Stats summary endpoint for dashboard overview."""
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        total_users = User.objects.count()
+        total_trips = 0
+        try:
+            from django.apps import apps
+            if apps.is_installed('trips'):
+                Trip = apps.get_model('trips', 'Trip')
+                total_trips = Trip.objects.count()
+        except Exception:
+            pass
+
+        return Response({
+            'total_users': total_users,
+            'total_trips': total_trips,
+            'status': 'active'
+        }, status=status.HTTP_200_OK)
+

@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from .views import RegisterView, ProfileView, ChangePasswordView, LogoutView
+from .views import RegisterView, ProfileView, ChangePasswordView, LogoutView, StatsView
 
 urlpatterns = [
     # JWT token endpoints
@@ -13,4 +13,6 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('stats/', StatsView.as_view(), name='stats'),
 ]
+
