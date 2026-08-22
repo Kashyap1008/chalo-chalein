@@ -1,179 +1,104 @@
-# 🚀 Hackathon Starter Pack
+# ✈️ Chalo Chalein (chalo-chalein)
 
-> **Django REST Framework + React + Vite + Tailwind CSS + JWT Auth + PostgreSQL**
-
-A fully wired full-stack starter pack so you can skip the boilerplate and start building your killer feature immediately.
+> **Smart Travel Itinerary Builder & Budget Planner**  
+> *Built for the 8-Hour Hackathon (9:00 AM – 5:00 PM)*
 
 ---
 
-## 📁 Project Structure
+## 📌 About the Project
+
+**Chalo Chalein** is a collaborative travel planning web application that allows users to seamlessly plan multi-city trips, organize day-by-day itineraries, track activity and stay budgets in real-time, and share read-only itineraries with friends or family via a public link.
+
+### 🌟 Core Demo Features
+
+1. **Authentication & Profile Management**: Secure JWT login, registration, and user profiles.
+2. **Trip & Itinerary Builder**: Create trips, add city stops, date ranges, and schedule daily activities.
+3. **Real-time Budget Calculator**: Automated aggregate calculation of stay, travel, activity, and meal costs.
+4. **City & Activity Discovery**: Searchable catalog of destinations and activities with cost & duration indices.
+5. **Public Itinerary Sharing**: Shareable read-only itinerary link for external viewers.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: Django REST Framework (DRF), SimpleJWT Auth, PostgreSQL / SQLite
+- **Frontend**: React 18, Vite, Tailwind CSS, Axios (with JWT Interceptors)
+- **Deployment & Tooling**: Git (Single-branch setup with atomic commits)
+
+---
+
+## 👥 Team Work Division & Roles
+
+| Member | Focus Area | Responsibilities |
+|---|---|---|
+| **Member A** | Backend (Auth & Users) | JWT Auth (`accounts` app), User Profile CRUD, Admin/Analytics stats |
+| **Member B** | Backend (Trips, Itinerary & Budget) | `trips` app (Trip/Stop/TripActivity CRUD), `catalog` app (City/Activity seed & search), Budget aggregation API |
+| **Member C** | Frontend Lead (Auth & Trip Scaffolding) | Axios + JWT wrapper, Router, Tailwind theme, Auth views, Dashboard, Create Trip UI |
+| **Member D** | Frontend (Itinerary & Discovery UI) | Itinerary Builder, City & Activity Search, Budget Breakdown charts/UI, Public Share Page |
+
+---
+
+## 📁 Repository Structure
 
 ```
-OdooxLDEC/
-├── backend/                    # Django REST Framework
-│   ├── core/                   # Project settings & root URLs
-│   │   ├── settings.py         # DRF, JWT, CORS, PostgreSQL config
-│   │   ├── urls.py             # Root URL configuration
-│   │   ├── wsgi.py
-│   │   └── asgi.py
-│   ├── accounts/               # User auth app (ready to use)
-│   │   ├── models.py           # Custom User model (email-based login)
-│   │   ├── serializers.py      # Register, Profile, ChangePassword
-│   │   ├── views.py            # Register, Profile, Logout views
-│   │   ├── urls.py             # Auth API routes
-│   │   └── admin.py
-│   ├── manage.py
-│   ├── requirements.txt
-│   ├── .env                    # Environment variables (local dev)
-│   └── .env.example
+chalo-chalein/
+├── backend/                    # Django REST Framework Backend
+│   ├── core/                   # Project config & root routing
+│   ├── accounts/               # Auth, User model, Profile endpoints
+│   ├── trips/                  # Trips, Stops, TripActivities & Budget APIs
+│   ├── catalog/                # Cities, Activities seed data & search APIs
+│   └── manage.py
 │
-├── frontend/                   # React + Vite + Tailwind CSS
+├── frontend/                   # React + Vite + Tailwind Frontend
 │   ├── src/
-│   │   ├── api/axios.js        # Axios instance with JWT interceptors
-│   │   ├── context/AuthContext.jsx  # Auth state management
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   └── ProtectedRoute.jsx
-│   │   ├── pages/
-│   │   │   ├── HomePage.jsx
-│   │   │   ├── LoginPage.jsx
-│   │   │   ├── RegisterPage.jsx
-│   │   │   └── DashboardPage.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css           # Tailwind + custom theme
-│   ├── index.html
-│   ├── vite.config.js          # Vite + Tailwind + API proxy
+│   │   ├── api/                # Axios wrapper with JWT token auto-refresh
+│   │   ├── context/            # AuthContext provider
+│   │   ├── pages/              # Auth, Dashboard, Itinerary, Discovery pages
+│   │   └── components/         # Reusable UI components & Navbar
 │   └── package.json
-│
-└── .gitignore
+└── README.md
 ```
 
 ---
 
-## 🏁 Quick Setup
+## 🚀 Quickstart Guide
 
-### Prerequisites
-
-- **Python 3.10+**
-- **Node.js 18+**
-- **PostgreSQL** running locally
-
-### 1. Database Setup
-
-```sql
--- In psql or pgAdmin:
-CREATE DATABASE hackathon_db;
-```
-
-### 2. Backend Setup
+### 1. Backend Setup (Django DRF)
 
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Mac/Linux
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
 
-# Install dependencies
 pip install -r requirements.txt
-
-# Edit .env if needed (DB credentials, etc.)
-
-# Run migrations
-python manage.py makemigrations
 python manage.py migrate
-
-# Create superuser (optional)
-python manage.py createsuperuser
-
-# Start server
 python manage.py runserver
 ```
 
-Backend runs at: **http://localhost:8000**
+*Backend runs at `http://127.0.0.1:8000/`*
 
-### 3. Frontend Setup
+### 2. Frontend Setup (React + Vite)
 
 ```bash
 cd frontend
-
-# Dependencies are already installed, but if needed:
 npm install
-
-# Start dev server
 npm run dev
 ```
 
-Frontend runs at: **http://localhost:5173**
-
-> The Vite dev server proxies `/api/*` requests to Django on port 8000, so no CORS issues in development.
+*Frontend runs at `http://localhost:5173/`*
 
 ---
 
-## 🔑 API Endpoints
+## ⏰ Hackathon Schedule (9:00 AM – 5:00 PM)
 
-| Method | Endpoint                      | Description       | Auth Required |
-|--------|-------------------------------|--------------------|:---:|
-| POST   | `/api/auth/register/`         | Register new user  | ❌ |
-| POST   | `/api/auth/login/`            | Get JWT tokens     | ❌ |
-| POST   | `/api/auth/token/refresh/`    | Refresh access token | ❌ |
-| GET    | `/api/auth/profile/`          | Get user profile   | ✅ |
-| PUT    | `/api/auth/profile/`          | Update profile     | ✅ |
-| POST   | `/api/auth/change-password/`  | Change password    | ✅ |
-| POST   | `/api/auth/logout/`           | Blacklist refresh token | ✅ |
-
----
-
-## 🧩 Adding a New Feature (Cheat Sheet)
-
-### Backend — New Django App
-
-```bash
-cd backend
-python manage.py startapp your_app
-```
-
-1. Add `'your_app'` to `INSTALLED_APPS` in `core/settings.py`
-2. Create models in `your_app/models.py`
-3. Create serializers in `your_app/serializers.py`
-4. Create views in `your_app/views.py`
-5. Add URLs in `your_app/urls.py`
-6. Include in `core/urls.py`:
-   ```python
-   path('api/your-app/', include('your_app.urls')),
-   ```
-7. Run `python manage.py makemigrations && python manage.py migrate`
-
-### Frontend — New Page
-
-1. Create `src/pages/YourPage.jsx`
-2. Add route in `App.jsx`:
-   ```jsx
-   <Route path="/your-page" element={<YourPage />} />
-   ```
-3. Use the API client:
-   ```jsx
-   import api from '../api/axios';
-   const { data } = await api.get('/your-app/endpoint/');
-   ```
-
----
-
-## ⚡ What's Pre-Configured
-
-- ✅ **Custom User Model** — Email-based login, extensible
-- ✅ **JWT Authentication** — Access + Refresh tokens with auto-refresh
-- ✅ **CORS** — Frontend ↔ Backend communication
-- ✅ **Axios Interceptors** — Auto-attach tokens, silent refresh on 401
-- ✅ **Auth Context** — Login/Register/Logout state management
-- ✅ **Protected Routes** — Route guard component
-- ✅ **Dark Theme** — Sleek glassmorphism UI
-- ✅ **Toast Notifications** — Success/error feedback
-- ✅ **API Proxy** — Vite proxies `/api/*` to Django
-- ✅ **Token Blacklisting** — Secure logout
-
----
-
-Good luck at the hackathon! 🎉
+- **09:00 – 09:30**: Kickoff, Lock ERD, Repo init & initial push
+- **09:30 – 12:00**: Sprint 1 — Auth E2E, Base Models, Frontend Routing Shell, Seed Data Catalog
+- **12:00 – 12:30**: Sync Point 1 & Integration Check
+- **12:30 – 15:00**: Sprint 2 — Itinerary Builder UI, Budget Calculation API, Search & Discovery
+- **15:00 – 15:20**: Sync Point 2 & Feature Freeze Triage
+- **15:20 – 16:15**: Budget Charts, Public Link Sharing, Auth/CORS Polish
+- **16:15 – 16:45**: Bug Fixes Only (No new features)
+- **16:45 – 17:00**: Seed Demo Data & Final Demo Run
