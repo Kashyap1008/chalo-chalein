@@ -14,12 +14,20 @@ import DiscoverySearchPage from "./pages/DiscoverySearchPage";
 import PublicSharedItineraryPage from "./pages/PublicSharedItineraryPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import ClickSpark from "./components/ClickSpark";
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ClickSpark
+          sparkColor="#c45838"
+          sparkSize={12}
+          sparkRadius={22}
+          sparkCount={8}
+          duration={400}
+        >
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<RegisterPage />} />
@@ -29,10 +37,31 @@ export default function App() {
           <Route path="/discover" element={<DiscoverySearchPage />} />
           <Route path="/discovery" element={<DiscoverySearchPage />} />
 
-          {/* Admin & Activity Analytics */}
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/analytics" element={<AdminDashboardPage />} />
-          <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
+          {/* Protected Admin & Activity Analytics */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Public Read-Only Share Pages */}
           <Route path="/share/:shareCode" element={<PublicSharedItineraryPage />} />
@@ -98,6 +127,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ClickSpark>
       </AuthProvider>
     </BrowserRouter>
   );

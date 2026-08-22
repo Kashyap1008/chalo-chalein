@@ -52,23 +52,23 @@ export default function HomePage() {
           </Button>
         </Link>
 
-        {/* Dynamic Animated Destination Ribbon (Positioned Below the Logo) */}
-        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-4 py-2 flex items-center justify-center">
+        {/* Dynamic Animated Destination Ribbon (Positioned Below the Logo & CTA) */}
+        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden mt-6 mb-2 py-2 flex items-center justify-center">
           <TextLoop
             text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Rishikesh ✦ Amritsar ✦ Agra ✦ Munnar ✦ Shimla ✦ Ooty ✦ Darjeeling ✦ Hampi ✦ Srinagar ✦ Jaisalmer ✦ Kerala ✦ Pondicherry"
             shape="wave"
             speed={85}
             direction="forward"
             separator="✦"
-            curviness={90}
-            fontSize={28}
+            curviness={75}
+            fontSize={20}
             fontWeight={800}
-            letterSpacing={4}
+            charSpacing={2}
             uppercase
             color="#ffffff"
             ribbon
             ribbonColor="#c45838"
-            ribbonWidth={52}
+            ribbonWidth={46}
             pauseOnHover
           />
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "../api/axios";
@@ -61,6 +61,64 @@ export default function ItineraryBuilderPage() {
     cover_photo: "",
     is_public: false,
   });
+
+  // Active stop object and country resolution for the Add Activity modal
+  const activeStopObj = useMemo(() => {
+    if (!trip || !selectedStopForActivity) return null;
+    return trip.stops?.find((s) => s.id === selectedStopForActivity);
+  }, [trip, selectedStopForActivity]);
+
+  const activeStopCity = useMemo(() => {
+    if (!activeStopObj) return null;
+    return (
+      cities.find((c) => c.id === activeStopObj.city) ||
+      cities.find(
+        (c) =>
+          c.name?.toLowerCase() ===
+          (activeStopObj.city_name || activeStopObj.custom_city_name)?.toLowerCase()
+      )
+    );
+  }, [activeStopObj, cities]);
+
+  // Filter catalog activities for this stop: City activities, Country activities, Global activities
+  const { stopCityActivities, stopCountryActivities, stopOtherActivities } = useMemo(() => {
+    if (!activeStopCity) {
+      return {
+        stopCityActivities: [],
+        stopCountryActivities: [],
+        stopOtherActivities: catalogActivities,
+      };
+    }
+
+    const cityActs = [];
+    const countryActs = [];
+    const otherActs = [];
+
+    catalogActivities.forEach((act) => {
+      const actCity = cities.find((c) => c.id === act.city);
+      const isSameCity =
+        act.city === activeStopCity.id ||
+        (activeStopCity.name && act.city_name?.toLowerCase() === activeStopCity.name.toLowerCase());
+
+      const isSameCountry =
+        (actCity?.country || act.country || "").toLowerCase() ===
+        (activeStopCity.country || "").toLowerCase();
+
+      if (isSameCity) {
+        cityActs.push(act);
+      } else if (isSameCountry) {
+        countryActs.push(act);
+      } else {
+        otherActs.push(act);
+      }
+    });
+
+    return {
+      stopCityActivities: cityActs,
+      stopCountryActivities: countryActs,
+      stopOtherActivities: otherActs,
+    };
+  }, [catalogActivities, activeStopCity, cities]);
 
   // Fetch full trip data and budget
   const loadTripData = async () => {
@@ -655,9 +713,18 @@ export default function ItineraryBuilderPage() {
           <GlassCard className="w-full max-w-md p-6 bg-white/95 shadow-2xl">
             <h3 className="font-display text-2xl text-ink mb-4">Add Activity to Stop</h3>
             <form onSubmit={handleAddActivity} className="flex flex-col gap-4">
-              {/* Optional Quick Pick from Catalog */}
+              {/* Optional Quick Pick from Catalog Filtered by Stop City & Country */}
               <div>
-                <label className="block text-sm font-medium text-ink mb-1">Pick from Catalog (Optional)</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs uppercase tracking-wider font-bold text-ink/70">
+                    Pick from Catalog (Optional)
+                  </label>
+                  {activeStopCity && (
+                    <span className="text-[11px] font-bold text-clay bg-clay/10 px-2.5 py-0.5 rounded-full">
+                      📍 {activeStopCity.name}, {activeStopCity.country}
+                    </span>
+                  )}
+                </div>
                 <select
                   onChange={(e) => {
                     const act = catalogActivities.find((a) => a.id === parseInt(e.target.value, 10));
@@ -671,14 +738,39 @@ export default function ItineraryBuilderPage() {
                       });
                     }
                   }}
-                  className="w-full rounded-lg border border-line bg-white px-3 py-2 text-ink text-sm outline-none"
+                  className="w-full rounded-xl border border-line bg-white px-3 py-2.5 text-ink text-xs font-semibold outline-none focus:ring-2 focus:ring-clay cursor-pointer"
                 >
-                  <option value="">-- Or type custom activity below --</option>
-                  {catalogActivities.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.city_name}) — ₹{a.cost}
-                    </option>
-                  ))}
+                  <option value="">-- Choose from Catalog or type custom below --</option>
+
+                  {stopCityActivities.length > 0 && (
+                    <optgroup label={`🌟 Curated in ${activeStopCity?.name || "this City"}`}>
+                      {stopCityActivities.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.city_name}) — ₹{parseFloat(a.cost || 0).toLocaleString("en-IN")}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {stopCountryActivities.length > 0 && (
+                    <optgroup label={`🇮🇳 Other Experiences in ${activeStopCity?.country || "this Country"}`}>
+                      {stopCountryActivities.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.city_name}) — ₹{parseFloat(a.cost || 0).toLocaleString("en-IN")}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {stopOtherActivities.length > 0 && (
+                    <optgroup label="🌍 Global Experiences">
+                      {stopOtherActivities.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name} ({a.city_name}) — ₹{parseFloat(a.cost || 0).toLocaleString("en-IN")}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 

@@ -13,39 +13,86 @@ export default function AdminDashboardPage() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userSearch, setUserSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [cityCountryFilter, setCityCountryFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("overview"); // overview | users | destinations
 
-  useEffect(() => {
-    async function loadAdminData() {
-      try {
-        setLoading(true);
-        const [statsRes, usersRes, citiesRes, actsRes] = await Promise.all([
-          axios.get("/auth/stats/"),
-          axios.get("/auth/users/"),
-          axios.get("/catalog/cities/"),
-          axios.get("/catalog/activities/"),
-        ]);
-        setStats(statsRes.data);
-        const uList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.results || []);
-        const cList = Array.isArray(citiesRes.data) ? citiesRes.data : (citiesRes.data?.results || []);
-        const aList = Array.isArray(actsRes.data) ? actsRes.data : (actsRes.data?.results || []);
-        setUsers(uList);
-        setCities(cList);
-        setActivities(aList);
-      } catch (err) {
-        console.error("Admin data fetch error", err);
-        toast.error("Could not load administrative stats.");
-      } finally {
-        setLoading(false);
+  const loadAdminData = async () => {
+    try {
+      setLoading(true);
+      const [statsRes, usersRes, citiesRes, actsRes] = await Promise.allSettled([
+        axios.get("/auth/stats/"),
+        axios.get("/auth/users/"),
+        axios.get("/catalog/cities/"),
+        axios.get("/catalog/activities/"),
+      ]);
+
+      if (statsRes.status === "fulfilled") {
+        setStats(statsRes.value.data);
       }
+      if (usersRes.status === "fulfilled") {
+        const uList = Array.isArray(usersRes.value.data)
+          ? usersRes.value.data
+          : usersRes.value.data?.results || [];
+        setUsers(uList);
+      }
+      if (citiesRes.status === "fulfilled") {
+        const cList = Array.isArray(citiesRes.value.data)
+          ? citiesRes.value.data
+          : citiesRes.value.data?.results || [];
+        setCities(cList);
+      }
+      if (actsRes.status === "fulfilled") {
+        const aList = Array.isArray(actsRes.value.data)
+          ? actsRes.value.data
+          : actsRes.value.data?.results || [];
+        setActivities(aList);
+      }
+    } catch (err) {
+      console.error("Admin data fetch error", err);
+      toast.error("Could not load administrative stats.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadAdminData();
   }, []);
 
+  const adminCountries = useMemo(() => {
+    const set = new Set(cities.map((c) => c.country).filter(Boolean));
+    return Array.from(set).sort();
+  }, [cities]);
+
+  const filteredCities = useMemo(() => {
+    return cities.filter((c) => {
+      const q = citySearch.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        c.name?.toLowerCase().includes(q) ||
+        c.country?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q);
+
+      const matchCountry =
+        cityCountryFilter === "all" ||
+        c.country?.toLowerCase() === cityCountryFilter.toLowerCase();
+
+      return matchSearch && matchCountry;
+    });
+  }, [cities, citySearch, cityCountryFilter]);
+
   const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return users;
+    const nonAdminUsers = users.filter(
+      (u) =>
+        !u.is_staff &&
+        !u.is_superuser &&
+        !u.email?.startsWith("admin") &&
+        !u.username?.startsWith("admin")
+    );
+    if (!userSearch.trim()) return nonAdminUsers;
     const q = userSearch.toLowerCase();
-    return users.filter(
+    return nonAdminUsers.filter(
       (u) =>
         u.email?.toLowerCase().includes(q) ||
         u.username?.toLowerCase().includes(q) ||
@@ -91,31 +138,41 @@ export default function AdminDashboardPage() {
             </p>
           </div>
 
-          {/* Quick Tabs */}
-          <div className="flex gap-2 p-1 rounded-xl bg-paper-deep border border-line">
+          {/* Quick Tabs & Refresh */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5 p-1 rounded-xl bg-paper-deep border border-line">
+              <button
+                onClick={() => setActiveTab("overview")}
+                className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  activeTab === "overview" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  activeTab === "users" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+                }`}
+              >
+                Travelers ({users.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("destinations")}
+                className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                  activeTab === "destinations" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+                }`}
+              >
+                Destinations ({cities.length})
+              </button>
+            </div>
+
             <button
-              onClick={() => setActiveTab("overview")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === "overview" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
-              }`}
+              onClick={loadAdminData}
+              title="Refresh real-time analytics"
+              className="p-2.5 rounded-xl bg-white border border-line hover:border-clay hover:text-clay text-ink/70 transition shadow-xs cursor-pointer text-xs flex items-center gap-1 font-semibold"
             >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === "users" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
-              }`}
-            >
-              Travelers ({users.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("destinations")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
-                activeTab === "destinations" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
-              }`}
-            >
-              Destinations ({cities.length})
+              <span>🔄</span>
             </button>
           </div>
         </div>
@@ -204,9 +261,12 @@ export default function AdminDashboardPage() {
                           Most Popular Destinations
                         </h2>
                       </div>
-                      <Link to="/discover" className="text-xs font-semibold text-clay hover:underline">
-                        View All →
-                      </Link>
+                      <button
+                        onClick={() => setActiveTab("destinations")}
+                        className="text-xs font-semibold text-clay hover:underline cursor-pointer"
+                      >
+                        View All ({cities.length}) →
+                      </button>
                     </div>
 
                     <div className="space-y-4">
@@ -234,32 +294,6 @@ export default function AdminDashboardPage() {
                       })}
                     </div>
                   </GlassCard>
-
-                  {/* System Health / Quick Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="rounded-2xl border border-line bg-paper-deep/60 p-5">
-                      <p className="text-xs uppercase tracking-wider text-ink/50 font-bold mb-1">
-                        API & Database Engine
-                      </p>
-                      <p className="font-display text-lg text-ink font-bold">
-                        Django 4.2 + SQLite / DRF
-                      </p>
-                      <p className="text-xs text-ink/60 mt-1">
-                        All migrations synced, JWT auth active
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-line bg-paper-deep/60 p-5">
-                      <p className="text-xs uppercase tracking-wider text-ink/50 font-bold mb-1">
-                        Frontend Interface
-                      </p>
-                      <p className="font-display text-lg text-ink font-bold">
-                        React 19 + Vite + Tailwind
-                      </p>
-                      <p className="text-xs text-ink/60 mt-1">
-                        Proxy routing on port 5173
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Recent Registrations Feed */}
@@ -273,25 +307,32 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="space-y-4">
-                      {users.slice(0, 6).map((u) => (
-                        <div
-                          key={u.id}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-line"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-clay text-white font-display text-sm font-bold flex items-center justify-center shrink-0">
-                            {(u.name || u.username || "U").charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-ink truncate">
-                              {u.name || u.username}
-                            </p>
-                            <p className="text-xs text-ink/50 truncate">{u.email}</p>
-                          </div>
-                          <span className="text-xs px-2 py-1 rounded-md bg-paper-deep text-ink/70 font-semibold shrink-0">
-                            {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
-                          </span>
+                      {filteredUsers.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-ink/50 bg-paper-deep/50 rounded-xl border border-line/60">
+                          <p className="font-semibold text-ink/70">No travelers registered yet.</p>
+                          <p className="mt-1 text-[11px]">New traveler signups will appear here in real-time.</p>
                         </div>
-                      ))}
+                      ) : (
+                        filteredUsers.slice(0, 6).map((u) => (
+                          <div
+                            key={u.id}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-line"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-clay text-white font-display text-sm font-bold flex items-center justify-center shrink-0">
+                              {(u.name || u.username || "U").charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-bold text-ink truncate">
+                                {u.name || u.username}
+                              </p>
+                              <p className="text-xs text-ink/50 truncate">{u.email}</p>
+                            </div>
+                            <span className="text-xs px-2 py-1 rounded-md bg-paper-deep text-ink/70 font-semibold shrink-0">
+                              {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </GlassCard>
                 </div>
@@ -327,30 +368,38 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
-                      {filteredUsers.map((u) => (
-                        <tr key={u.id} className="hover:bg-white/40 transition">
-                          <td className="py-3 px-2 font-bold text-ink">
-                            <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-full bg-clay text-white text-xs font-bold flex items-center justify-center">
-                                {(u.name || u.username || "U").charAt(0).toUpperCase()}
-                              </span>
-                              <span>{u.name || u.username}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2 text-ink/70">{u.email}</td>
-                          <td className="py-3 px-2">
-                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-clay/10 text-clay">
-                              {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-xs text-ink/50">{formatDate(u.created_at || u.date_joined)}</td>
-                          <td className="py-3 px-2">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
-                              Active
-                            </span>
+                      {filteredUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-12 text-center text-xs text-ink/50 font-medium">
+                            No registered travelers found. New user registrations will automatically list here.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredUsers.map((u) => (
+                          <tr key={u.id} className="hover:bg-white/40 transition">
+                            <td className="py-3 px-2 font-bold text-ink">
+                              <div className="flex items-center gap-2">
+                                <span className="w-7 h-7 rounded-full bg-clay text-white text-xs font-bold flex items-center justify-center">
+                                  {(u.name || u.username || "U").charAt(0).toUpperCase()}
+                                </span>
+                                <span>{u.name || u.username}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 text-ink/70">{u.email}</td>
+                            <td className="py-3 px-2">
+                              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-clay/10 text-clay">
+                                {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
+                              </span>
+                            </td>
+                            <td className="py-3 px-2 text-xs text-ink/50">{formatDate(u.created_at || u.date_joined)}</td>
+                            <td className="py-3 px-2">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                                Active
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -360,42 +409,77 @@ export default function AdminDashboardPage() {
             {/* TAB 3: DESTINATIONS */}
             {activeTab === "destinations" && (
               <GlassCard className="p-7">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                   <div>
                     <h2 className="font-display text-2xl text-ink font-bold">Catalog Destinations</h2>
-                    <p className="text-xs text-ink/50">Curated destinations and weather profiles.</p>
+                    <p className="text-xs text-ink/50">
+                      Showing {filteredCities.length} of {cities.length} global cities & destinations.
+                    </p>
                   </div>
-                  <Link to="/discover">
-                    <Button variant="solid" className="!text-xs">Explore Discovery Page</Button>
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {cities.map((city) => (
-                    <div
-                      key={city.id}
-                      className="rounded-xl border border-line bg-white/70 p-4 flex flex-col justify-between shadow-sm"
+                  <div className="flex flex-wrap items-center gap-3">
+                    <select
+                      value={cityCountryFilter}
+                      onChange={(e) => setCityCountryFilter(e.target.value)}
+                      className="bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink outline-none focus:ring-2 focus:ring-clay cursor-pointer"
                     >
-                      <div>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-display text-lg font-bold text-ink">{city.name}</h3>
-                            <p className="text-xs text-ink/50">{city.country}</p>
-                          </div>
-                          <span className="text-xs px-2 py-0.5 bg-clay/10 text-clay font-bold rounded-full">
-                            ★ {city.popularity}
-                          </span>
-                        </div>
-                        <p className="text-xs text-ink/70 mt-2 line-clamp-2">{city.description}</p>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-line text-xs text-ink/60 flex justify-between">
-                        <span>🌡️ {city.weather_temp}</span>
-                        <span>🗓️ {city.best_season}</span>
-                      </div>
-                    </div>
-                  ))}
+                      <option value="all">🌍 All Countries ({adminCountries.length})</option>
+                      {adminCountries.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Search city, country..."
+                      value={citySearch}
+                      onChange={(e) => setCitySearch(e.target.value)}
+                      className="w-full sm:w-56 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink outline-none focus:ring-2 focus:ring-clay"
+                    />
+                  </div>
                 </div>
+
+                {filteredCities.length === 0 ? (
+                  <div className="p-12 text-center text-ink/60">
+                    <p className="font-bold">No destinations match your filter.</p>
+                    <button
+                      onClick={() => {
+                        setCitySearch("");
+                        setCityCountryFilter("all");
+                      }}
+                      className="text-xs text-clay font-bold mt-2 hover:underline cursor-pointer"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredCities.map((city) => (
+                      <div
+                        key={city.id}
+                        className="rounded-xl border border-line bg-white/70 p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-display text-lg font-bold text-ink">{city.name}</h3>
+                              <p className="text-xs text-ink/50 font-semibold">{city.country}</p>
+                            </div>
+                            <span className="text-xs px-2 py-0.5 bg-clay/10 text-clay font-bold rounded-full">
+                              ★ {city.popularity}
+                            </span>
+                          </div>
+                          <p className="text-xs text-ink/70 mt-2 line-clamp-2">{city.description}</p>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-line text-xs text-ink/60 flex justify-between">
+                          <span>🌡️ {city.weather_temp}</span>
+                          <span>🗓️ {city.best_season}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </GlassCard>
             )}
           </>

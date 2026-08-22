@@ -3,11 +3,11 @@ import { gsap } from 'gsap';
 
 import './TextLoop.css';
 
-const VIEW_W = 1200;
-const VIEW_H = 520;
+const VIEW_W = 1600;
+const VIEW_H = 260;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
-const EDGE_PAD = 6;
+const EDGE_PAD = 8;
 
 const buildPath = (shape, curviness, ribbonWidth) => {
   const c = Math.max(0, curviness);
@@ -15,12 +15,12 @@ const buildPath = (shape, curviness, ribbonWidth) => {
 
   switch (shape) {
     case 'circle': {
-      const r = Math.min(90 + c * 0.95, room);
+      const r = Math.min(80 + c * 0.6, room);
       return `M ${CX - r} ${CY} A ${r} ${r} 0 1 1 ${CX + r} ${CY} A ${r} ${r} 0 1 1 ${CX - r} ${CY} Z`;
     }
     case 'infinity': {
-      const r = 150 + c * 1.4;
-      const h = Math.min(60 + c * 0.95, room);
+      const r = 150 + c * 1.0;
+      const h = Math.min(50 + c * 0.6, room);
       return [
         `M ${CX} ${CY}`,
         `C ${CX + r * 0.55} ${CY - h} ${CX + r} ${CY - h} ${CX + r} ${CY}`,
@@ -31,35 +31,36 @@ const buildPath = (shape, curviness, ribbonWidth) => {
       ].join(' ');
     }
     case 'arch': {
-      const rise = Math.min(120 + c * 1.1, room * 2);
-      return `M 120 ${CY + rise / 2} Q ${CX} ${CY - rise * 1.5} ${VIEW_W - 120} ${CY + rise / 2}`;
+      const rise = Math.min(80 + c * 0.7, room * 1.5);
+      return `M 100 ${CY + rise / 2} Q ${CX} ${CY - rise * 1.2} ${VIEW_W - 100} ${CY + rise / 2}`;
     }
     case 'line':
-      return `M -320 ${CY} L ${VIEW_W + 320} ${CY}`;
+      return `M -400 ${CY} L ${VIEW_W + 400} ${CY}`;
     case 'wave':
     default: {
-      const a = Math.min(c * 2.2, room * 2);
-      return `M -320 ${CY} Q -160 ${CY - a} 0 ${CY} T 320 ${CY} T 640 ${CY} T 960 ${CY} T 1280 ${CY} T ${VIEW_W + 320} ${CY}`;
+      // Pronounced sinusoidal wave undulating up and down across the viewBox
+      const a = Math.min(Math.max(50, c * 0.95), room);
+      return `M -400 ${CY} C -250 ${CY - a} -150 ${CY - a} 0 ${CY} S 250 ${CY + a} 400 ${CY} S 650 ${CY - a} 800 ${CY} S 1050 ${CY + a} 1200 ${CY} S 1450 ${CY - a} 1600 ${CY} S 1850 ${CY + a} 2000 ${CY}`;
     }
   }
 };
 
 const TextLoop = ({
-  text = 'Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu',
+  text = 'Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Rishikesh ✦ Amritsar ✦ Agra ✦ Munnar ✦ Shimla',
   shape = 'wave',
   path,
   speed = 85,
   direction = 'forward',
   separator = '✦',
-  curviness = 90,
-  fontSize = 28,
+  curviness = 75,
+  fontSize = 20,
   fontWeight = 800,
-  letterSpacing = 4,
+  charSpacing = 2, // Space between characters inside each city
   uppercase = true,
   color = '#ffffff',
   ribbon = true,
-  ribbonColor = '#c45838', // Orange theme
-  ribbonWidth = 52,
+  ribbonColor = '#c45838', // Orange brand theme
+  ribbonWidth = 46,
   pauseOnHover = true,
   className = '',
   style = {}
@@ -77,21 +78,41 @@ const TextLoop = ({
 
   const d = useMemo(() => path || buildPath(shape, curviness, ribbonWidth), [path, shape, curviness, ribbonWidth]);
 
-  // Enhanced wide spacing between words/countries/cities
+  // Format unit with generous city-to-city gaps AND character-to-character spacing
   const unit = useMemo(() => {
-    const base = uppercase ? String(text).toUpperCase() : String(text);
-    const gap = separator ? `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${separator}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0` : '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
-    return `${base}${gap}`;
-  }, [text, separator, uppercase]);
+    let items = [];
+    if (Array.isArray(text)) {
+      items = text;
+    } else if (typeof text === 'string') {
+      if (separator && text.includes(separator)) {
+        items = text.split(separator).map(s => s.trim()).filter(Boolean);
+      } else {
+        items = [text.trim()];
+      }
+    }
+
+    // Space between individual characters inside each city name
+    const charPad = '\u00A0'.repeat(Math.max(1, charSpacing));
+    const formatCity = (name) => {
+      const clean = uppercase ? String(name).toUpperCase() : String(name);
+      return clean.split('').join(charPad);
+    };
+
+    // Wide gap between cities
+    const cityGapPad = '\u00A0'.repeat(16);
+    const gap = separator ? `${cityGapPad}${separator}${cityGapPad}` : '\u00A0'.repeat(32);
+
+    const formattedCities = items.map(formatCity);
+    return formattedCities.join(gap) + gap;
+  }, [text, separator, uppercase, charSpacing]);
 
   const textStyle = useMemo(
     () => ({
       fontSize: `${fontSize}px`,
       fontWeight,
-      letterSpacing: `${letterSpacing}px`,
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     }),
-    [fontSize, fontWeight, letterSpacing]
+    [fontSize, fontWeight]
   );
 
   useLayoutEffect(() => {
@@ -125,7 +146,7 @@ const TextLoop = ({
     return () => {
       cancelled = true;
     };
-  }, [d, unit, fontSize, fontWeight, letterSpacing]);
+  }, [d, unit, fontSize, fontWeight, charSpacing]);
 
   useEffect(() => {
     const { length } = metrics;

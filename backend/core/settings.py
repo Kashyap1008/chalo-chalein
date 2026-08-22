@@ -73,27 +73,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 
-# Database - PostgreSQL with SQLite Fallback for Local Dev
-USE_SQLITE = config('USE_SQLITE', default=False, cast=bool)
+# Multi-Database Configuration:
+# 1. 'default': Primary User Database (User Accounts, Trips, Itineraries, Catalog)
+# 2. 'admin_db': Dedicated Admin Database (Staff Accounts, Admin Audit Logs, Platform Metrics)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'admin_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'admin_db.sqlite3',
+    }
+}
 
-if USE_SQLITE:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='chalo_chalein_db'),
-            'USER': config('DB_USER', default='postgres'),
-            'PASSWORD': config('DB_PASSWORD', default='postgres'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
-    }
+DATABASE_ROUTERS = ['core.db_router.AdminDatabaseRouter']
 
 
 # Password validation - relaxed for local development / hackathon
