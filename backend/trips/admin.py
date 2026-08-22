@@ -29,4 +29,4 @@ class StopAdmin(admin.ModelAdmin):
 
 @admin.register(TripActivity)
 class TripActivityAdmin(admin.ModelAdmin):
-    list_display = ('activity', 'stop', 'scheduled_date', 'scheduled_time', 'cost_override')
+    list_display = ('activity', 'stop', 'scheduled_date', 'scheduled_time', 'cost')
