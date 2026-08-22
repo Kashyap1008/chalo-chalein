@@ -3,10 +3,10 @@ from catalog.models import City, Activity
 
 
 class Command(BaseCommand):
-    help = 'Seeds initial catalog cities and activities'
+    help = 'Seeds initial catalog cities and activities with weather and packing intelligence'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write('Seeding catalog data...')
+        self.stdout.write('Seeding catalog data with weather & packing tips...')
 
         SEED_DATA = [
             {
@@ -16,6 +16,10 @@ class Command(BaseCommand):
                 "popularity": 95,
                 "image_url": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80",
                 "description": "High-altitude Himalayan resort town known for snow peaks, adventure sports, and scenic beauty.",
+                "weather_temp": "12°C",
+                "weather_condition": "Crisp & Snowy",
+                "best_season": "Oct – Mar",
+                "packing_tips": "Heavy woolens, thermal inners, trekking boots, windproof jacket, lip balm",
                 "activities": [
                     {"name": "Solang Valley Paragliding", "activity_type": "adventure", "cost": 3000.00, "duration_hours": 3.0, "description": "Soar over snow-clad mountains and lush valleys."},
                     {"name": "Old Manali Cafe Crawl", "activity_type": "food", "cost": 1200.00, "duration_hours": 4.0, "description": "Explore quaint bohemian cafes with local and continental cuisine."},
@@ -30,6 +34,10 @@ class Command(BaseCommand):
                 "popularity": 98,
                 "image_url": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80",
                 "description": "India's beach paradise known for palm-fringed coastlines, seafood, nightlife, and Portuguese heritage.",
+                "weather_temp": "29°C",
+                "weather_condition": "Tropical Beach Sun",
+                "best_season": "Nov – Feb",
+                "packing_tips": "Swimwear, beach towel, polarized sunglasses, flip flops, sunscreen SPF 50",
                 "activities": [
                     {"name": "Scuba Diving at Grand Island", "activity_type": "adventure", "cost": 4500.00, "duration_hours": 6.0, "description": "Underwater diving session with coral reefs and marine life."},
                     {"name": "Sunset Cruise on Mandovi River", "activity_type": "sightseeing", "cost": 800.00, "duration_hours": 2.0, "description": "Traditional Goan folk dance and music cruise at dusk."},
@@ -44,6 +52,10 @@ class Command(BaseCommand):
                 "popularity": 90,
                 "image_url": "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80",
                 "description": "The Pink City of Rajasthan, famous for royal palaces, majestic forts, and rich heritage.",
+                "weather_temp": "26°C",
+                "weather_condition": "Warm & Royal",
+                "best_season": "Oct – Mar",
+                "packing_tips": "Cotton kurtas, walking shoes, sun hat, sunglasses, DSLR camera",
                 "activities": [
                     {"name": "Amer Fort & Light Show", "activity_type": "culture", "cost": 500.00, "duration_hours": 3.5, "description": "Grand fortress overlooking Maota Lake with evening sound & light show."},
                     {"name": "Hawa Mahal & City Palace Tour", "activity_type": "sightseeing", "cost": 600.00, "duration_hours": 3.0, "description": "Iconic Palace of Winds and royal residence inspection."},
@@ -58,6 +70,10 @@ class Command(BaseCommand):
                 "popularity": 88,
                 "image_url": "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80",
                 "description": "One of the oldest continuously inhabited cities in the world, spiritual heart of India on the Ganges.",
+                "weather_temp": "22°C",
+                "weather_condition": "Misty Holy Waters",
+                "best_season": "Nov – Mar",
+                "packing_tips": "Modest temple attire, slip-on shoes, cotton scarf, water bottle, power bank",
                 "activities": [
                     {"name": "Sunrise Boat Ride on Ganges", "activity_type": "sightseeing", "cost": 600.00, "duration_hours": 2.0, "description": "Peaceful morning boat ride watching morning rituals at the ghats."},
                     {"name": "Dashashwamedh Ganga Aarti", "activity_type": "culture", "cost": 0.00, "duration_hours": 1.5, "description": "Mesmerizing evening prayer ritual with fire and chanting."},
@@ -72,6 +88,10 @@ class Command(BaseCommand):
                 "popularity": 92,
                 "image_url": "https://images.unsplash.com/photo-1615836245337-f5b9b2303f1c?auto=format&fit=crop&w=800&q=80",
                 "description": "The City of Lakes in Rajasthan, romantic setting with grand palaces surrounding Lake Pichola.",
+                "weather_temp": "25°C",
+                "weather_condition": "Lakeside Breeze",
+                "best_season": "Sep – Mar",
+                "packing_tips": "Smart casuals for rooftop dining, sun hat, comfortable sneakers, light stole",
                 "activities": [
                     {"name": "Lake Pichola Sunset Boat Ride", "activity_type": "sightseeing", "cost": 900.00, "duration_hours": 2.0, "description": "Boat ride visiting Jagmandir Island with views of Lake Palace."},
                     {"name": "City Palace Museum Tour", "activity_type": "culture", "cost": 400.00, "duration_hours": 3.0, "description": "Rajasthan's largest palace complex with stunning peacock courtyards."},
@@ -85,6 +105,10 @@ class Command(BaseCommand):
                 "popularity": 96,
                 "image_url": "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?auto=format&fit=crop&w=800&q=80",
                 "description": "The land of high mountain passes, pristine azure lakes, and dramatic lunar landscapes.",
+                "weather_temp": "8°C",
+                "weather_condition": "Alpine Crisp Sky",
+                "best_season": "May – Sep",
+                "packing_tips": "High-altitude fleece, thermal layers, UV sunglasses, Diamox for AMS, moisturiser",
                 "activities": [
                     {"name": "Pangong Tso Lake Camping", "activity_type": "adventure", "cost": 3500.00, "duration_hours": 12.0, "description": "Overnight lakeside tent stay under the Milky Way."},
                     {"name": "Nubra Valley Camel Safari & Sand Dunes", "activity_type": "sightseeing", "cost": 1500.00, "duration_hours": 4.0, "description": "Ride double-humped Bactrian camels in Hunder sand dunes."},
@@ -98,6 +122,10 @@ class Command(BaseCommand):
                 "popularity": 89,
                 "image_url": "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80",
                 "description": "God's Own Country hill station famous for rolling emerald tea plantations and misty mountains.",
+                "weather_temp": "18°C",
+                "weather_condition": "Cool Misty Hills",
+                "best_season": "Sep – May",
+                "packing_tips": "Light cardigan / sweater, umbrella, hiking shoes, insect repellent",
                 "activities": [
                     {"name": "Kolukkumalai Sunrise Jeep Safari", "activity_type": "adventure", "cost": 2200.00, "duration_hours": 4.5, "description": "Catch cloud-bed sunrise at the world's highest organic tea estate."},
                     {"name": "Tea Museum & Tasting Tour", "activity_type": "food", "cost": 450.00, "duration_hours": 2.0, "description": "Learn the artisanal process of tea making with fresh brew tasting."},
@@ -111,6 +139,10 @@ class Command(BaseCommand):
                 "popularity": 94,
                 "image_url": "https://images.unsplash.com/photo-1600100397608-f010f4439c3e?auto=format&fit=crop&w=800&q=80",
                 "description": "Yoga capital of the world and white-water river rafting hub nestled along the foothills of Himalayas.",
+                "weather_temp": "23°C",
+                "weather_condition": "Riverside Zen",
+                "best_season": "Sep – Jun",
+                "packing_tips": "Quick-dry clothes for rafting, yoga pants, river sandals, waterproof bag",
                 "activities": [
                     {"name": "Ganga White Water Rafting (16km)", "activity_type": "adventure", "cost": 1200.00, "duration_hours": 3.5, "description": "Tackle thrilling Grade III rapids including Roller Coaster and Golf Course."},
                     {"name": "Beatles Ashram Exploration", "activity_type": "culture", "cost": 300.00, "duration_hours": 2.5, "description": "Walk through psychedelic graffiti meditation huts where The Beatles composed music."},
@@ -124,6 +156,10 @@ class Command(BaseCommand):
                 "popularity": 97,
                 "image_url": "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80",
                 "description": "Home of the iconic Taj Mahal and grand Mughal architectural wonders on the banks of Yamuna.",
+                "weather_temp": "24°C",
+                "weather_condition": "Mughal Heritage Sun",
+                "best_season": "Oct – Mar",
+                "packing_tips": "Breathable cottons, wide-brim hat, shoe covers for Taj Mahal, sunglasses",
                 "activities": [
                     {"name": "Sunrise Taj Mahal Guided Tour", "activity_type": "culture", "cost": 1100.00, "duration_hours": 3.0, "description": "Marvel at the marble monument of love in morning golden light."},
                     {"name": "Agra Fort Heritage Walk", "activity_type": "sightseeing", "cost": 650.00, "duration_hours": 2.5, "description": "Massive red sandstone fort residence of Mughal Emperors."},
@@ -137,6 +173,10 @@ class Command(BaseCommand):
                 "popularity": 91,
                 "image_url": "https://images.unsplash.com/photo-1588096344356-9b497b78f0b7?auto=format&fit=crop&w=800&q=80",
                 "description": "Spiritual capital of Sikhism, revered for the Golden Temple and legendary culinary heritage.",
+                "weather_temp": "21°C",
+                "weather_condition": "Golden Sunset",
+                "best_season": "Oct – Mar",
+                "packing_tips": "Headscarf / bandana for Golden Temple, warm shawl for Wagah border, slip-ons",
                 "activities": [
                     {"name": "Golden Temple & Langar Experience", "activity_type": "culture", "cost": 0.00, "duration_hours": 3.0, "description": "Peaceful meditation by the holy Amrit Sarovar and community meal."},
                     {"name": "Attari-Wagah Border Beating Retreat Ceremony", "activity_type": "sightseeing", "cost": 500.00, "duration_hours": 4.0, "description": "High-octane patriotic military drill and flag lowering ceremony."},
@@ -147,17 +187,17 @@ class Command(BaseCommand):
 
         for city_data in SEED_DATA:
             activities = city_data.pop('activities', [])
-            city, created = City.objects.get_or_create(
+            city, created = City.objects.update_or_create(
                 name=city_data['name'],
                 defaults=city_data
             )
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created City: {city.name}"))
             else:
-                self.stdout.write(f"City already exists: {city.name}")
+                self.stdout.write(self.style.SUCCESS(f"Updated City: {city.name} with weather & packing tips"))
 
             for act_data in activities:
-                act, act_created = Activity.objects.get_or_create(
+                act, act_created = Activity.objects.update_or_create(
                     city=city,
                     name=act_data['name'],
                     defaults=act_data
@@ -165,4 +205,4 @@ class Command(BaseCommand):
                 if act_created:
                     self.stdout.write(self.style.SUCCESS(f"  - Added Activity: {act.name}"))
 
-        self.stdout.write(self.style.SUCCESS('Catalog seeding complete!'))
+        self.stdout.write(self.style.SUCCESS('Catalog seeding with weather & packing tips complete!'))

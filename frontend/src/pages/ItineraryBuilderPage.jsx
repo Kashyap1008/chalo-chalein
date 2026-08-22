@@ -18,6 +18,15 @@ const initialDays = [
 
 const baseCosts = { stay: 4500, transport: 2200 };
 
+const defaultPackingList = [
+  { id: 1, text: 'Government ID & Flight/Train Tickets', packed: true, category: 'Essentials' },
+  { id: 2, text: 'Comfortable Walking / Trekking Shoes', packed: true, category: 'Clothing' },
+  { id: 3, text: 'Power Bank (10,000mAh+) & Chargers', packed: false, category: 'Gadgets' },
+  { id: 4, text: 'First Aid Kit & Motion Sickness Meds', packed: false, category: 'Health' },
+  { id: 5, text: 'Sunscreen SPF 50+ & Polarized Sunglasses', packed: false, category: 'Personal' },
+  { id: 6, text: 'Reusable Insulated Water Bottle', packed: false, category: 'Essentials' },
+];
+
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(`${value}T12:00:00`))
   : 'Choose a date';
@@ -36,12 +45,16 @@ const ItineraryBuilderPage = () => {
   const [activeDay, setActiveDay] = useState(1);
   const [viewMode, setViewMode] = useState('timeline');
   const [isSaved, setIsSaved] = useState(false);
-  const [currency, setCurrency] = useState('INR'); // INR or USD
+  const [currency, setCurrency] = useState('INR');
   const [showQR, setShowQR] = useState(false);
   const [savedTripId, setSavedTripId] = useState(null);
 
+  // Tier 2: Packing Checklist state
+  const [packingList, setPackingList] = useState(defaultPackingList);
+  const [newItemText, setNewItemText] = useState('');
+
   const currencySymbol = currency === 'INR' ? '₹' : '$';
-  const currencyRate = currency === 'INR' ? 1 : 0.012; // 1 INR ~ 0.012 USD
+  const currencyRate = currency === 'INR' ? 1 : 0.012;
 
   const formatAmount = (amt) => {
     const converted = amt * currencyRate;
@@ -119,7 +132,6 @@ const ItineraryBuilderPage = () => {
 
     try {
       if (user) {
-        // Post trip to live backend
         const payload = {
           name: trip.name,
           description: `Journey to ${trip.destination}`,
@@ -135,7 +147,6 @@ const ItineraryBuilderPage = () => {
       setIsSaved(true);
       toast.success('Trip saved to Chalo Chalein cloud! 🎉');
     } catch {
-      // Local fallback
       setIsSaved(true);
       toast.success('Trip saved to your local itinerary.');
     }
@@ -146,6 +157,21 @@ const ItineraryBuilderPage = () => {
     const text = encodeURIComponent(`✈️ Check out my trip "${trip.name}" (${trip.destination}) on Chalo Chalein!\nEstimated Budget: ${formatAmount(totals.total)} for ${trip.travelers} travelers (${formatAmount(totals.perPerson)}/person).\n\n${shareUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
+
+  const togglePackingItem = (id) => {
+    setPackingList((items) => items.map((item) => item.id === id ? { ...item, packed: !item.packed } : item));
+  };
+
+  const addPackingItem = (e) => {
+    e.preventDefault();
+    if (!newItemText.trim()) return;
+    setPackingList((items) => [...items, { id: Date.now(), text: newItemText.trim(), packed: false, category: 'Custom' }]);
+    setNewItemText('');
+    toast.success('Packing item added!');
+  };
+
+  const packedCount = packingList.filter((i) => i.packed).length;
+  const packedPercentage = Math.round((packedCount / (packingList.length || 1)) * 100);
 
   const addDay = () => {
     const nextId = days.length + 1;
@@ -173,37 +199,33 @@ const ItineraryBuilderPage = () => {
   const inputClass = (field) => `mt-2 w-full rounded-xl border bg-slate-950/70 px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400 ${errors[field] ? 'border-rose-400' : 'border-slate-700'}`;
   const activeDayPlan = days.find((day) => day.id === activeDay) || days[0];
 
-  const completedBasics = [trip.name.trim(), trip.destination.trim(), trip.startDate, trip.endDate].filter(Boolean).length;
-  const hasValidDates = trip.startDate && trip.endDate && trip.endDate >= trip.startDate;
-  const readiness = hasValidDates && completedBasics === 4 ? 'Ready to save' : 'Needs a quick check';
-
   const currentShareUrl = window.location.origin + (savedTripId ? `/share/${savedTripId}` : '/share/demo');
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentShareUrl)}&bgcolor=0f172a&color=38bdf8`;
 
   return (
-    <main className="min-h-screen bg-[#f7f8f6] px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
+    <main className="min-h-screen bg-[#07111f] px-4 py-8 text-white sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
         
         {/* Header Bar */}
         <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
-              Multi-City Itinerary & Budget Studio
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="rounded-full bg-cyan-500/20 border border-cyan-400/40 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+                Chalo Chalein Studio
+              </span>
+              <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
+                🌤️ 26°C · Warm & Royal · Best: Oct–Mar
+              </span>
+            </div>
             <h1 className="max-w-2xl text-3xl font-black tracking-tight sm:text-5xl bg-gradient-to-r from-white via-slate-100 to-cyan-200 bg-clip-text text-transparent">
               Build a trip that feels like you.
             </h1>
-            <p className="mt-3 max-w-xl text-sm text-slate-600">
-              Plan stops, schedule activities, and track per-person costs with real-time budget splitting.
+            <p className="mt-2 max-w-xl text-sm text-slate-400">
+              Plan stops, schedule daily activities, pack smart, and track group split costs live.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`rounded-xl border px-4 py-2.5 text-xs font-bold ${readiness === 'Ready to save' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
-              <span className="mr-1.5">{readiness === 'Ready to save' ? '✓' : '!'}</span>
-              {readiness}
-            </div>
-
             {/* Currency Toggle */}
             <div className="flex rounded-xl border border-slate-700 bg-slate-950 p-1">
               <button
@@ -250,7 +272,7 @@ const ItineraryBuilderPage = () => {
 
         {/* QR Code Popover */}
         {showQR && (
-          <div className="mb-6 inline-flex flex-col items-center rounded-2xl border border-cyan-200 bg-white p-5 shadow-xl backdrop-blur-xl">
+          <div className="mb-6 inline-flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-slate-950/90 p-5 shadow-2xl backdrop-blur-xl animate-fadeIn">
             <p className="mb-2 text-xs font-semibold text-slate-300">Scan to view live itinerary on mobile</p>
             <img src={qrCodeUrl} alt="Trip QR Code" className="h-36 w-36 rounded-lg border border-slate-800 p-1 bg-slate-900" />
             <p className="mt-2 text-[10px] text-cyan-400">Live sync enabled</p>
@@ -263,7 +285,7 @@ const ItineraryBuilderPage = () => {
           <section className="space-y-6">
             
             {/* Trip Basics Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7 backdrop-blur-md">
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">01 / Trip basics</p>
@@ -295,7 +317,7 @@ const ItineraryBuilderPage = () => {
               </div>
 
               {/* Group Size Split Slider */}
-              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-cyan-400 font-bold">Group Travel Party</p>
                   <p className="mt-1 font-semibold text-slate-200">{trip.travelers} {trip.travelers === 1 ? 'Traveler (Solo)' : 'Travelers (Group Split)'}</p>
@@ -308,7 +330,7 @@ const ItineraryBuilderPage = () => {
             </div>
 
             {/* Daily Rhythm / Itinerary Schedule */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7 backdrop-blur-md">
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">02 / Daily rhythm</p>
@@ -330,7 +352,7 @@ const ItineraryBuilderPage = () => {
                     type="button"
                     key={day.id}
                     onClick={() => setActiveDay(day.id)}
-                    className={`min-w-28 rounded-xl border px-3 py-2 text-left transition ${activeDay === day.id ? 'border-cyan-400 bg-cyan-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}
+                    className={`min-w-28 rounded-xl border px-3 py-2 text-left transition ${activeDay === day.id ? 'border-cyan-400 bg-cyan-400/10' : 'border-slate-800 bg-slate-950/50 hover:border-slate-600'}`}
                   >
                     <span className="block text-xs text-slate-500">Day {day.id}</span>
                     <span className="mt-1 block text-sm font-semibold">{formatDate(day.date)}</span>
@@ -340,7 +362,7 @@ const ItineraryBuilderPage = () => {
 
               {/* Timeline View */}
               {viewMode === 'timeline' && activeDayPlan && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold">{activeDayPlan.label}</h3>
@@ -381,7 +403,7 @@ const ItineraryBuilderPage = () => {
               {viewMode === 'calendar' && (
                 <div className="grid gap-3 md:grid-cols-2">
                   {days.map((day) => (
-                    <button type="button" key={day.id} onClick={() => { setActiveDay(day.id); setViewMode('timeline'); }} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-cyan-400/70">
+                    <button type="button" key={day.id} onClick={() => { setActiveDay(day.id); setViewMode('timeline'); }} className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 text-left transition hover:border-cyan-400/70">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Day {day.id}</p>
@@ -407,30 +429,109 @@ const ItineraryBuilderPage = () => {
                 </div>
               )}
             </div>
+
+            {/* Tier 2: Smart Packing & Checklist Assistant */}
+            <div className="rounded-3xl border border-indigo-500/30 bg-slate-900/80 p-5 sm:p-7 backdrop-blur-md">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎒</span>
+                    <h2 className="text-xl font-bold text-white">Smart Packing Checklist</h2>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">Tailored essentials for {trip.destination || 'your trip'}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-cyan-300">{packedCount}/{packingList.length}</span>
+                  <p className="text-[11px] text-slate-400">{packedPercentage}% packed</p>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800 mb-5">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 transition-all duration-300"
+                  style={{ width: `${packedPercentage}%` }}
+                />
+              </div>
+
+              {/* Checklist Items */}
+              <div className="grid gap-2.5 sm:grid-cols-2 mb-4">
+                {packingList.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => togglePackingItem(item.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition ${
+                      item.packed
+                        ? 'border-emerald-500/40 bg-emerald-950/20 text-slate-400'
+                        : 'border-slate-800 bg-slate-950/50 hover:border-slate-700 text-slate-200'
+                    }`}
+                  >
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
+                      item.packed ? 'border-emerald-400 bg-emerald-400 text-slate-950' : 'border-slate-600'
+                    }`}>
+                      {item.packed && <span className="text-xs font-black">✓</span>}
+                    </div>
+                    <span className={`text-xs font-medium truncate ${item.packed ? 'line-through text-slate-500' : ''}`}>
+                      {item.text}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Add Custom Packing Item */}
+              <form onSubmit={addPackingItem} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newItemText}
+                  onChange={(e) => setNewItemText(e.target.value)}
+                  placeholder="Add custom packing item (e.g. DSLR Camera)..."
+                  className="flex-1 rounded-xl border border-slate-700 bg-slate-950/60 px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-400"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-bold text-white transition"
+                >
+                  + Add
+                </button>
+              </form>
+            </div>
           </section>
 
           {/* Right Sidebar — Smart Split Budget Pulse */}
           <aside className="space-y-6">
             
-            {/* Destination Snapshot */}
-            <div className="overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-6 shadow-sm backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Trip snapshot</p>
+            {/* Destination Snapshot with Weather */}
+            <div className="overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/15 via-slate-900 to-slate-900 p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Trip snapshot</p>
+                <span className="text-xs font-bold text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                  🌤️ 26°C Sunny
+                </span>
+              </div>
               <h2 className="mt-3 text-2xl font-black">{trip.destination || 'Your Destination'}</h2>
-              <p className="mt-2 text-sm text-slate-400">{formatDate(trip.startDate)} — {formatDate(trip.endDate)}</p>
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-white p-3 shadow-sm">
+              <p className="mt-1 text-sm text-slate-400">{formatDate(trip.startDate)} — {formatDate(trip.endDate)}</p>
+              
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-slate-950/60 p-3">
                   <p className="text-xs text-slate-500">Total Stops</p>
                   <p className="mt-1 text-xl font-bold">{days.reduce((sum, day) => sum + day.activities.length, 0)}</p>
                 </div>
-                <div className="rounded-xl bg-white p-3 shadow-sm">
+                <div className="rounded-xl bg-slate-950/60 p-3">
                   <p className="text-xs text-slate-500">Party Size</p>
                   <p className="mt-1 text-xl font-bold text-cyan-300">{trip.travelers} travelers</p>
                 </div>
               </div>
+
+              {/* Best Season Badge */}
+              <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 flex items-center justify-between text-xs">
+                <span className="text-slate-400">📅 Best Season:</span>
+                <span className="font-bold text-emerald-300">Oct – Mar (Peak)</span>
+              </div>
             </div>
 
             {/* Split Budget Pulse Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Budget Pulse</h2>
                 <span className="text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">

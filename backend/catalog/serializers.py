@@ -20,7 +20,8 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = [
             'id', 'name', 'country', 'cost_index', 'popularity',
-            'image_url', 'description', 'activities'
+            'image_url', 'description', 'weather_temp', 'weather_condition',
+            'best_season', 'packing_tips', 'activities'
         ]
 
 
@@ -31,5 +32,6 @@ class CityListSerializer(serializers.ModelSerializer):
         model = City
         fields = [
             'id', 'name', 'country', 'cost_index', 'popularity',
-            'image_url', 'description', 'activities_count'
+            'image_url', 'description', 'weather_temp', 'weather_condition',
+            'best_season', 'packing_tips', 'activities_count'
         ]

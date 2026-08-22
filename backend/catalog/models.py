@@ -8,6 +8,12 @@ class City(models.Model):
     popularity = models.IntegerField(default=50, help_text="Popularity score 1-100")
     image_url = models.URLField(max_length=500, blank=True, default="")
     description = models.TextField(blank=True, default="")
+    
+    # Tier 2 Weather & Travel Intelligence
+    weather_temp = models.CharField(max_length=50, default="24°C", blank=True)
+    weather_condition = models.CharField(max_length=100, default="Sunny & Pleasant", blank=True)
+    best_season = models.CharField(max_length=100, default="Oct – Mar", blank=True)
+    packing_tips = models.TextField(blank=True, default="Comfortable walking shoes, camera, power bank, light jacket")
 
     class Meta:
         verbose_name_plural = "Cities"
