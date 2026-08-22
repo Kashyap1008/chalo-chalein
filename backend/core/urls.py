@@ -10,9 +10,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
-
-    # Add your app URLs here:
-    # path('api/your-app/', include('your_app.urls')),
+    path('api/catalog/', include('catalog.urls')),
+    path('api/', include('trips.urls')),
 ]
 
 # Serve media files in development
