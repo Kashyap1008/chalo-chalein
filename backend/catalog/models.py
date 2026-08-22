@@ -4,7 +4,7 @@ from django.db import models
 class City(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100, default="India")
-    cost_index = models.IntegerField(default=3, help_weight="1 (Budget) to 5 (Luxury)")
+    cost_index = models.IntegerField(default=3, help_text="1 (Budget) to 5 (Luxury)")
     popularity = models.IntegerField(default=50, help_text="Popularity score 1-100")
     image_url = models.URLField(max_length=500, blank=True, default="")
     description = models.TextField(blank=True, default="")
