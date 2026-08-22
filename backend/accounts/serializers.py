@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
@@ -50,3 +51,40 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is not correct.")
         return value
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT login serializer that returns user profile data
+    alongside the access and refresh tokens.
+    Frontend (Member C) needs user info immediately on login
+    without making a separate /profile call.
+    """
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Add user profile data to the token response
+        data['user'] = UserSerializer(self.user).data
+        return data
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    """Serializer for admin user listing with trip count."""
+    trip_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'bio', 'avatar',
+                  'is_active', 'date_joined', 'created_at', 'trip_count')
+        read_only_fields = fields
+
+    def get_trip_count(self, obj):
+        """Count trips owned by this user (safe if trips app not installed yet)."""
+        try:
+            from django.apps import apps
+            if apps.is_installed('trips'):
+                Trip = apps.get_model('trips', 'Trip')
+                return Trip.objects.filter(owner=obj).count()
+        except Exception:
+            pass
+        return 0

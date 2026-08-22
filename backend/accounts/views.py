@@ -1,13 +1,29 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 
-from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    ChangePasswordSerializer,
+    CustomTokenObtainPairSerializer,
+    UserListSerializer,
+)
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom login view that returns user profile data alongside JWT tokens.
+    Response: { access, refresh, user: { id, email, username, bio, avatar, created_at } }
+    """
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -79,24 +95,78 @@ class LogoutView(APIView):
             )
 
 
+class UserListView(generics.ListAPIView):
+    """
+    Admin endpoint: list all users with their trip counts.
+    Used by the admin/analytics dashboard.
+    """
+    serializer_class = UserListSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all().order_by('-created_at')
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Optional search filter
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                email__icontains=search
+            ) | queryset.filter(
+                username__icontains=search
+            )
+        return queryset
+
+
 class StatsView(APIView):
-    """Analytics/Stats summary endpoint for dashboard overview."""
+    """
+    Analytics/Stats summary endpoint for dashboard overview.
+    Returns total users, total trips, top cities, and recent users.
+    """
     permission_classes = (AllowAny,)
 
     def get(self, request):
         total_users = User.objects.count()
         total_trips = 0
+        top_cities = []
+
         try:
             from django.apps import apps
             if apps.is_installed('trips'):
                 Trip = apps.get_model('trips', 'Trip')
                 total_trips = Trip.objects.count()
+
+                # Top cities by number of stops
+                if apps.is_installed('catalog'):
+                    Stop = apps.get_model('trips', 'Stop')
+                    City = apps.get_model('catalog', 'City')
+                    top_city_ids = (
+                        Stop.objects.values('city')
+                        .annotate(visit_count=Count('id'))
+                        .order_by('-visit_count')[:5]
+                    )
+                    for entry in top_city_ids:
+                        try:
+                            city = City.objects.get(id=entry['city'])
+                            top_cities.append({
+                                'id': city.id,
+                                'name': city.name,
+                                'country': city.country,
+                                'visit_count': entry['visit_count'],
+                            })
+                        except City.DoesNotExist:
+                            pass
         except Exception:
             pass
+
+        # Recent 5 users
+        recent_users = UserSerializer(
+            User.objects.order_by('-created_at')[:5], many=True
+        ).data
 
         return Response({
             'total_users': total_users,
             'total_trips': total_trips,
-            'status': 'active'
+            'top_cities': top_cities,
+            'recent_users': recent_users,
+            'status': 'active',
         }, status=status.HTTP_200_OK)
-
