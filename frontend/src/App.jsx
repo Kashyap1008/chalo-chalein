@@ -7,6 +7,9 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ItineraryBuilderPage from './pages/ItineraryBuilderPage';
+import DiscoverySearchPage from './pages/DiscoverySearchPage';
+import PublicSharedItineraryPage from './pages/PublicSharedItineraryPage';
 
 function App() {
   return (
@@ -26,7 +29,23 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Add your routes here */}
+            <Route
+              path="/itinerary-builder"
+              element={
+                <ProtectedRoute>
+                  <ItineraryBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/discovery"
+              element={
+                <ProtectedRoute>
+                  <DiscoverySearchPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/shared-itinerary" element={<PublicSharedItineraryPage />} />
           </Routes>
         </div>
 
