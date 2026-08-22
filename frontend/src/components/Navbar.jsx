@@ -15,14 +15,14 @@ export default function Navbar() {
 
   const linkClass = ({ isActive }) =>
     `text-xs uppercase tracking-wide transition-colors ${
-      isActive ? "text-clay" : "text-ink hover:text-clay"
+      isActive ? "text-clay font-bold" : "text-ink hover:text-clay"
     }`;
 
   return (
-    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-2xl">
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-3xl">
       <div className="flex items-center justify-between gap-4 px-6 py-3 rounded-full backdrop-blur-lg bg-white/20 border border-white/50 shadow-lg">
-        <NavLink to="/" className="font-display text-base text-ink shrink-0">
-          Chalo Chalein
+        <NavLink to="/" className="font-display text-base text-ink shrink-0 font-extrabold flex items-center gap-1.5">
+          <span>🚀</span> Chalo Chalein
         </NavLink>
 
         <div className="hidden sm:flex items-center gap-6">
@@ -33,6 +33,12 @@ export default function Navbar() {
               </NavLink>
               <NavLink to="/trips" className={linkClass}>
                 Trips
+              </NavLink>
+              <NavLink to="/discovery" className={linkClass}>
+                Discover
+              </NavLink>
+              <NavLink to="/admin-dashboard" className={linkClass}>
+                Admin Stats
               </NavLink>
               <NavLink to="/profile" className={linkClass}>
                 Profile
@@ -49,7 +55,7 @@ export default function Navbar() {
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              className="text-xs uppercase tracking-wide text-ink/60 hover:text-clay"
+              className="text-xs uppercase tracking-wide text-ink/60 hover:text-clay cursor-pointer"
             >
               Log out
             </button>
@@ -69,7 +75,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="sm:hidden text-ink"
+          className="sm:hidden text-ink cursor-pointer"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -88,12 +94,18 @@ export default function Navbar() {
               <NavLink to="/trips" className={linkClass} onClick={() => setMenuOpen(false)}>
                 Trips
               </NavLink>
+              <NavLink to="/discovery" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Discover
+              </NavLink>
+              <NavLink to="/admin-dashboard" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Admin Stats
+              </NavLink>
               <NavLink to="/profile" className={linkClass} onClick={() => setMenuOpen(false)}>
                 Profile
               </NavLink>
               <button
                 onClick={handleLogout}
-                className="text-xs uppercase tracking-wide text-ink/60 text-left"
+                className="text-xs uppercase tracking-wide text-ink/60 text-left cursor-pointer"
               >
                 Log out
               </button>

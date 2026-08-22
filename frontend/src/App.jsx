@@ -10,73 +10,80 @@ import DashboardPage from "./pages/DashboardPage";
 import TripListPage from "./pages/TripListPage";
 import CreateTripPage from "./pages/CreateTripPage";
 import ProfilePage from "./pages/ProfilePage";
-
-function TripDetailPlaceholder() {
-  return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-6 text-center">
-      <div>
-        <h1 className="font-display text-2xl text-ink mb-2">Itinerary builder</h1>
-        <p className="text-ink/60">Coming soon — this trip's detail page is under construction.</p>
-      </div>
-    </div>
-  );
-}
+import ItineraryBuilderPage from "./pages/ItineraryBuilderPage";
+import DiscoverySearchPage from "./pages/DiscoverySearchPage";
+import PublicSharedItineraryPage from "./pages/PublicSharedItineraryPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<RegisterPage />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<RegisterPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/trips"
-            element={
-              <ProtectedRoute>
-                <TripListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Static /trips/new MUST come before dynamic /trips/:id */}
-          <Route
-            path="/trips/new"
-            element={
-              <ProtectedRoute>
-                <CreateTripPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/trips/:id"
-            element={
-              <ProtectedRoute>
-                <TripDetailPlaceholder />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trips"
+          element={
+            <ProtectedRoute>
+              <TripListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trips/new"
+          element={
+            <ProtectedRoute>
+              <CreateTripPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/itinerary-builder"
+          element={
+            <ProtectedRoute>
+              <ItineraryBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/discovery"
+          element={
+            <ProtectedRoute>
+              <DiscoverySearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/shared-itinerary" element={<PublicSharedItineraryPage />} />
+        <Route path="/share/:shareId" element={<PublicSharedItineraryPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
