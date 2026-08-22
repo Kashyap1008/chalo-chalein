@@ -174,19 +174,29 @@ class TripActivityDetailView(generics.RetrieveUpdateDestroyAPIView):
         return TripActivity.objects.filter(stop__trip__owner=self.request.user)
 
 
-# ─────────────────────────────────────────────
-# Budget Endpoint
-# ─────────────────────────────────────────────
-
 class TripBudgetView(APIView):
-    """Get detailed budget breakdown for a trip."""
-    permission_classes = (IsAuthenticated,)
+    """Get detailed budget breakdown for a trip with split-traveler calculation."""
+    permission_classes = (AllowAny,)
 
     def get(self, request, trip_id):
-        trip = get_object_or_404(Trip, id=trip_id, owner=request.user)
+        trip = None
+        if request.user.is_authenticated:
+            trip = Trip.objects.filter(id=trip_id, owner=request.user).first()
+        if not trip:
+            trip = Trip.objects.filter(id=trip_id, is_public=True).first()
+
+        if not trip:
+            return Response({'detail': 'Trip not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Parse travelers count (default: 1)
+        try:
+            travelers = max(1, int(request.query_params.get('travelers', 1)))
+        except (ValueError, TypeError):
+            travelers = 1
+
         breakdown = {}
         stop_costs = []
-        grand_total = 0
+        grand_total = 0.0
 
         for stop in trip.stops.all().select_related('city'):
             stop_total = float(stop.stay_cost or 0)
@@ -195,7 +205,7 @@ class TripBudgetView(APIView):
             for ta in stop.trip_activities.all().select_related('activity'):
                 cost = float(ta.cost or 0)
                 act_type = ta.activity_type
-                breakdown[act_type] = breakdown.get(act_type, 0) + cost
+                breakdown[act_type] = breakdown.get(act_type, 0.0) + cost
                 stop_total += cost
                 activities.append({
                     'name': ta.title or (ta.activity.name if ta.activity else 'Activity'),
@@ -204,7 +214,7 @@ class TripBudgetView(APIView):
                 })
 
             if stop.stay_cost and float(stop.stay_cost) > 0:
-                breakdown['stay'] = breakdown.get('stay', 0) + float(stop.stay_cost)
+                breakdown['stay'] = breakdown.get('stay', 0.0) + float(stop.stay_cost)
 
             stop_costs.append({
                 'city': stop.city.name,
@@ -216,10 +226,26 @@ class TripBudgetView(APIView):
             })
             grand_total += stop_total
 
+        # Calculate trip duration
+        trip_days = 1
+        if trip.start_date and trip.end_date:
+            trip_days = max(1, (trip.end_date - trip.start_date).days + 1)
+        elif len(stop_costs) > 0:
+            trip_days = max(1, len(stop_costs))
+
+        per_person_total = round(grand_total / travelers, 2)
+        daily_average = round(grand_total / trip_days, 2)
+        daily_per_person = round(per_person_total / trip_days, 2)
+
         return Response({
             'trip_id': trip.id,
             'trip_name': trip.name,
+            'travelers_count': travelers,
+            'trip_days': trip_days,
+            'grand_total': round(grand_total, 2),
+            'per_person_total': per_person_total,
+            'daily_average': daily_average,
+            'daily_per_person': daily_per_person,
             'by_category': {k: round(v, 2) for k, v in breakdown.items()},
             'by_stop': stop_costs,
-            'grand_total': round(grand_total, 2),
         })
