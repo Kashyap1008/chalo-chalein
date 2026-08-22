@@ -35,47 +35,42 @@ export default function HomePage() {
     <div className="min-h-screen bg-paper text-ink overflow-x-hidden">
       <Navbar />
 
-      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 overflow-hidden">
-        {/* Dynamic Animated Destination Ribbon Behind the Hero Title */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-85">
-          <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden flex items-center justify-center">
-            <TextLoop
-              text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Rishikesh ✦ Amritsar ✦ Agra ✦ Munnar ✦ Shimla ✦ Ooty ✦ Darjeeling ✦ Hampi ✦ Srinagar ✦ Jaisalmer ✦ Kerala ✦ Pondicherry"
-              shape="wave"
-              speed={85}
-              direction="forward"
-              separator="✦"
-              curviness={95}
-              fontSize={28}
-              fontWeight={800}
-              letterSpacing={4}
-              uppercase
-              color="#ffffff"
-              ribbon
-              ribbonColor="#c45838"
-              ribbonWidth={52}
-              pauseOnHover={false}
-            />
-          </div>
-        </div>
+      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-12">
+        <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold mb-5">
+          Multi-city trip planning
+        </span>
+        <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95]">
+          Chalo <em className="text-clay not-italic italic">Chalein.</em>
+        </h1>
+        <p className="mt-5 text-ink/60 max-w-md text-base sm:text-lg">
+          Build the itinerary, track the budget, share the plan — all before
+          the first flight leaves the ground.
+        </p>
+        <Link to="/signup" className="mt-8 mb-6">
+          <Button variant="solid" className="!px-7 !py-3 !text-sm">
+            Start planning →
+          </Button>
+        </Link>
 
-        {/* Foreground Hero Content */}
-        <div className="relative z-10 flex flex-col items-center">
-          <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold mb-5 bg-paper/85 backdrop-blur-md px-3 py-1 rounded-full border border-line shadow-xs">
-            Multi-city trip planning
-          </span>
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] drop-shadow-sm select-none">
-            Chalo <em className="text-clay not-italic italic">Chalein.</em>
-          </h1>
-          <p className="mt-5 text-ink/70 max-w-md text-base sm:text-lg bg-paper/70 backdrop-blur-sm px-4 py-2 rounded-xl">
-            Build the itinerary, track the budget, share the plan — all before
-            the first flight leaves the ground.
-          </p>
-          <Link to="/signup" className="mt-8">
-            <Button variant="solid" className="!px-7 !py-3 !text-sm shadow-xl hover:shadow-2xl">
-              Start planning →
-            </Button>
-          </Link>
+        {/* Dynamic Animated Destination Ribbon (Positioned Below the Logo) */}
+        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-4 py-2 flex items-center justify-center">
+          <TextLoop
+            text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Rishikesh ✦ Amritsar ✦ Agra ✦ Munnar ✦ Shimla ✦ Ooty ✦ Darjeeling ✦ Hampi ✦ Srinagar ✦ Jaisalmer ✦ Kerala ✦ Pondicherry"
+            shape="wave"
+            speed={85}
+            direction="forward"
+            separator="✦"
+            curviness={90}
+            fontSize={28}
+            fontWeight={800}
+            letterSpacing={4}
+            uppercase
+            color="#ffffff"
+            ribbon
+            ribbonColor="#c45838"
+            ribbonWidth={52}
+            pauseOnHover
+          />
         </div>
       </section>
 
