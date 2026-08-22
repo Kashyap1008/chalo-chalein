@@ -313,7 +313,7 @@ const PublicSharedItineraryPage = () => {
           <p className="mt-2 text-sm text-slate-400">Create, customize, and budget your own multi-city trip in minutes with Chalo Chalein.</p>
           <button
             type="button"
-            onClick={() => navigate('/builder')}
+            onClick={() => navigate('/itinerary-builder')}
             className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-sky-500/25 transition hover:scale-105"
           >
             <span>✨</span> Build Your Own Itinerary
