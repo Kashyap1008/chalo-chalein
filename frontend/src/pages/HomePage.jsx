@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Button from "../components/Button";
 import GlassCard from "../components/GlassCard";
+import TextLoop from "../components/TextLoop";
 
 const FEATURES = [
   {
@@ -31,10 +32,10 @@ const STEPS = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-paper text-ink overflow-x-hidden">
       <Navbar />
 
-      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6">
+      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-12">
         <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold mb-5">
           Multi-city trip planning
         </span>
@@ -45,9 +46,30 @@ export default function HomePage() {
           Build the itinerary, track the budget, share the plan — all before
           the first flight leaves the ground.
         </p>
-        <Link to="/signup" className="mt-9">
+        <Link to="/signup" className="mt-8 mb-6">
           <Button variant="glass">Start planning →</Button>
         </Link>
+
+        {/* Dynamic Animated Destination Ribbon */}
+        <div className="w-full max-w-5xl my-4">
+          <TextLoop
+            text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu ✦ Rishikesh ✦ Amritsar ✦ Agra"
+            shape="wave"
+            speed={85}
+            direction="forward"
+            separator="✦"
+            curviness={85}
+            fontSize={42}
+            fontWeight={800}
+            letterSpacing={2}
+            uppercase
+            color="#ffffff"
+            ribbon
+            ribbonColor="#c45838"
+            ribbonWidth={80}
+            pauseOnHover
+          />
+        </div>
       </section>
 
       <section className="bg-paper-deep py-28 px-6">
