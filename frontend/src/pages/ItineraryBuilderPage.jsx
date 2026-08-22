@@ -153,7 +153,7 @@ const ItineraryBuilderPage = () => {
   };
 
   const shareWhatsApp = () => {
-    const shareUrl = window.location.origin + (savedTripId ? `/share/${savedTripId}` : '/builder');
+    const shareUrl = window.location.origin + (savedTripId ? `/share/${savedTripId}` : '/share/demo');
     const text = encodeURIComponent(`✈️ Check out my trip "${trip.name}" (${trip.destination}) on Chalo Chalein!\nEstimated Budget: ${formatAmount(totals.total)} for ${trip.travelers} travelers (${formatAmount(totals.perPerson)}/person).\n\n${shareUrl}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };

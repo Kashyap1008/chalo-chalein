@@ -118,11 +118,11 @@ const DiscoverySearchPage = () => {
       return;
     }
     localStorage.setItem('chalo:selected-experiences', JSON.stringify(selectedActivities));
-    navigate('/builder');
+    navigate('/itinerary-builder');
   };
 
   return (
-    <main className="min-h-screen bg-[#07111f] text-white">
+    <main className="min-h-screen bg-[#f7f8f6] text-slate-900">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -left-32 top-20 h-[420px] w-[420px] rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute right-0 top-[28rem] h-[420px] w-[420px] rounded-full bg-violet-500/10 blur-3xl" />
@@ -144,7 +144,7 @@ const DiscoverySearchPage = () => {
 
           <button
             type="button"
-            onClick={() => navigate('/builder')}
+            onClick={() => navigate('/itinerary-builder')}
             className="rounded-2xl border border-cyan-500/30 bg-slate-900/80 px-5 py-2.5 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-950/60 hover:text-white"
           >
             My Itinerary Studio →
