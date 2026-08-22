@@ -1,78 +1,120 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Button from "../components/Button";
+import GlassCard from "../components/GlassCard";
 
-const HomePage = () => {
-  const { isAuthenticated } = useAuth();
+const FEATURES = [
+  {
+    n: "01",
+    title: "Day-by-day itineraries",
+    body: "Add stops, assign dates, and reorder cities freely. The plan builds itself as you go.",
+  },
+  {
+    n: "02",
+    title: "Live budget tracking",
+    body: "Every activity and stay rolls up into one running total, broken down by category.",
+  },
+  {
+    n: "03",
+    title: "Share the plan",
+    body: "A public link anyone can view — read-only, or copy it as their own starting point.",
+  },
+];
 
+const STEPS = [
+  { n: "01", title: "Start a trip", body: "Name it, set your dates, add a short description. That's your foundation." },
+  { n: "02", title: "Add your stops", body: "Search cities, drop them into the trip, and set how long you'll stay in each." },
+  { n: "03", title: "Fill in activities", body: "Browse by interest or cost, attach to a day, and watch the budget update live." },
+  { n: "04", title: "Share it", body: "Get a public link for the finished plan — send it, post it, or let others copy it." },
+];
+
+export default function HomePage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col">
-      {/* Hero Section */}
-      <div className="flex-1 flex items-center justify-center px-4 relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-500/8 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen bg-paper text-ink">
+      <Navbar />
+
+      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6">
+        <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold mb-5">
+          Multi-city trip planning
+        </span>
+        <h1 className="font-display text-5xl sm:text-6xl md:text-7xl leading-[0.95]">
+          Chalo <em className="text-clay not-italic italic">Chalein.</em>
+        </h1>
+        <p className="mt-5 text-ink/60 max-w-md text-base">
+          Build the itinerary, track the budget, share the plan — all before
+          the first flight leaves the ground.
+        </p>
+        <Link to="/signup" className="mt-9">
+          <Button variant="glass">Start planning →</Button>
+        </Link>
+      </section>
+
+      <section className="bg-paper-deep py-28 px-6">
+        <div className="text-center mb-14">
+          <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold">
+            Why it works
+          </span>
+          <h2 className="font-display text-3xl sm:text-4xl mt-3">
+            Everything a trip needs, nothing it doesn't
+          </h2>
         </div>
 
-        <div className="text-center max-w-3xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-sm text-indigo-300 mb-6">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-            Hackathon Ready
-          </div>
-
-          {/* Title */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
-            Build{' '}
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Something
-            </span>
-            <br />
-            Amazing
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-slate-400 mb-8 max-w-xl mx-auto leading-relaxed">
-            Your hackathon starter pack is ready. Django REST + React + JWT auth —
-            skip the boilerplate and focus on what matters.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to={isAuthenticated ? '/dashboard' : '/register'}
-              className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 text-base"
-            >
-              {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
-            </Link>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3.5 bg-[#1e293b] hover:bg-[#334155] text-slate-300 font-semibold rounded-xl border border-[#334155] transition-all text-base"
-            >
-              View on GitHub
-            </a>
-          </div>
-
-          {/* Tech Stack Pills */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-3">
-            {['Django REST', 'React', 'Vite', 'Tailwind CSS', 'JWT Auth', 'PostgreSQL'].map(
-              (tech) => (
-                <span
-                  key={tech}
-                  className="px-3 py-1.5 bg-[#1e293b]/60 border border-[#334155] rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:border-[#475569] transition-all"
-                >
-                  {tech}
-                </span>
-              )
-            )}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {FEATURES.map((f) => (
+            <GlassCard key={f.n} className="p-8">
+              <span className="font-display text-clay text-sm block mb-3">
+                {f.n}
+              </span>
+              <h3 className="font-display text-xl mb-2">{f.title}</h3>
+              <p className="text-sm text-ink/60 leading-relaxed">{f.body}</p>
+            </GlassCard>
+          ))}
         </div>
-      </div>
+      </section>
+
+      <section className="py-28 px-6">
+        <div className="text-center mb-14">
+          <span className="uppercase tracking-[0.3em] text-xs text-clay font-semibold">
+            How it works
+          </span>
+          <h2 className="font-display text-3xl sm:text-4xl mt-3">
+            From idea to itinerary
+          </h2>
+        </div>
+
+        <div className="max-w-xl mx-auto border-l border-line">
+          {STEPS.map((s, i) => (
+            <div
+              key={s.n}
+              className={`relative pl-9 ${i !== STEPS.length - 1 ? "pb-12" : ""}`}
+            >
+              <span className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-clay" />
+              <span className="font-display text-clay text-xs block mb-1">
+                {s.n}
+              </span>
+              <h3 className="font-display text-xl mb-1">{s.title}</h3>
+              <p className="text-sm text-ink/60 max-w-sm leading-relaxed">
+                {s.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="bg-ink text-paper text-center py-24 px-6">
+        <h2 className="font-display text-4xl mb-3">Ready when you are.</h2>
+        <p className="text-paper/50 max-w-sm mx-auto mb-8">
+          No credit card, no setup — just start planning your next trip.
+        </p>
+        <Link to="/signup">
+          <Button variant="glass">Plan a trip →</Button>
+        </Link>
+        <div className="max-w-4xl mx-auto mt-16 pt-6 border-t border-white/10 flex justify-between text-xs text-paper/40">
+          <span>Chalo Chalein</span>
+          <span>Built for a hackathon, made for real trips</span>
+        </div>
+      </footer>
     </div>
   );
-};
-
-export default HomePage;
+}

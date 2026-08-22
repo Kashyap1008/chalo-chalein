@@ -1,74 +1,115 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Button from "./Button";
 
-const Navbar = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+export default function Navbar() {
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
-  return (
-    <nav className="bg-[#1e293b]/80 backdrop-blur-xl border-b border-[#334155] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent hover:from-indigo-300 hover:to-purple-300 transition-all"
-          >
-            <span className="text-2xl">🚀</span>
-            HackStarter
-          </Link>
+  const linkClass = ({ isActive }) =>
+    `text-xs uppercase tracking-wide transition-colors ${
+      isActive ? "text-clay" : "text-ink hover:text-clay"
+    }`;
 
-          {/* Nav Links */}
-          <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-[#334155] transition-all text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <div className="flex items-center gap-3 ml-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                    {user?.username?.charAt(0)?.toUpperCase() || '?'}
-                  </div>
-                  <span className="text-sm text-slate-300 hidden sm:block">
-                    {user?.username}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="ml-2 text-sm text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-slate-300 hover:text-white px-4 py-2 rounded-lg hover:bg-[#334155] transition-all text-sm font-medium"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-all text-sm font-medium shadow-lg shadow-indigo-500/20"
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
-          </div>
+  return (
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-2xl">
+      <div className="flex items-center justify-between gap-4 px-6 py-3 rounded-full backdrop-blur-lg bg-white/20 border border-white/50 shadow-lg">
+        <NavLink to="/" className="font-display text-base text-ink shrink-0">
+          Chalo Chalein
+        </NavLink>
+
+        <div className="hidden sm:flex items-center gap-6">
+          {isAuthenticated ? (
+            <>
+              <NavLink to="/dashboard" className={linkClass}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/trips" className={linkClass}>
+                Trips
+              </NavLink>
+              <NavLink to="/profile" className={linkClass}>
+                Profile
+              </NavLink>
+            </>
+          ) : (
+            <NavLink to="/" className={linkClass}>
+              Explore
+            </NavLink>
+          )}
         </div>
+
+        <div className="hidden sm:flex items-center gap-4 shrink-0">
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="text-xs uppercase tracking-wide text-ink/60 hover:text-clay"
+            >
+              Log out
+            </button>
+          ) : (
+            <>
+              <NavLink to="/login" className={linkClass}>
+                Log in
+              </NavLink>
+              <NavLink to="/signup">
+                <Button variant="solid" className="!px-4 !py-1.5 !text-xs">
+                  Sign up
+                </Button>
+              </NavLink>
+            </>
+          )}
+        </div>
+
+        {/* Mobile toggle */}
+        <button
+          className="sm:hidden text-ink"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label="Toggle menu"
+        >
+          ☰
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="sm:hidden mt-2 rounded-2xl backdrop-blur-lg bg-white/30 border border-white/50 shadow-lg p-4 flex flex-col gap-3">
+          {isAuthenticated ? (
+            <>
+              <NavLink to="/dashboard" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/trips" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Trips
+              </NavLink>
+              <NavLink to="/profile" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Profile
+              </NavLink>
+              <button
+                onClick={handleLogout}
+                className="text-xs uppercase tracking-wide text-ink/60 text-left"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Log in
+              </NavLink>
+              <NavLink to="/signup" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Sign up
+              </NavLink>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
-};
-
-export default Navbar;
+}

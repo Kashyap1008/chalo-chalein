@@ -1,13 +1,14 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+export default function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <span className="text-ink/50 text-sm">Loading…</span>
       </div>
     );
   }
@@ -17,6 +18,4 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return children;
-};
-
-export default ProtectedRoute;
+}
