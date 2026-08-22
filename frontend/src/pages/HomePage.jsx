@@ -50,23 +50,23 @@ export default function HomePage() {
           <Button variant="glass">Start planning →</Button>
         </Link>
 
-        {/* Dynamic Animated Destination Ribbon */}
-        <div className="w-full max-w-5xl my-4">
+        {/* Dynamic Animated Destination Ribbon (Border to Border & Center Aligned) */}
+        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-6 py-2 flex items-center justify-center">
           <TextLoop
             text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu ✦ Rishikesh ✦ Amritsar ✦ Agra"
             shape="wave"
-            speed={85}
+            speed={80}
             direction="forward"
             separator="✦"
-            curviness={85}
-            fontSize={42}
+            curviness={65}
+            fontSize={36}
             fontWeight={800}
-            letterSpacing={2}
+            letterSpacing={4}
             uppercase
             color="#ffffff"
             ribbon
             ribbonColor="#c45838"
-            ribbonWidth={80}
+            ribbonWidth={76}
             pauseOnHover
           />
         </div>
