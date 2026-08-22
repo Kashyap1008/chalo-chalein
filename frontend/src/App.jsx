@@ -46,6 +46,7 @@ function App() {
               }
             />
             <Route path="/shared-itinerary" element={<PublicSharedItineraryPage />} />
+            <Route path="/share/:shareId" element={<PublicSharedItineraryPage />} />
           </Routes>
         </div>
 
