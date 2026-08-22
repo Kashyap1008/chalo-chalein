@@ -48,18 +48,18 @@ const TextLoop = ({
   text = 'Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu',
   shape = 'wave',
   path,
-  speed = 90,
+  speed = 85,
   direction = 'forward',
   separator = '✦',
   curviness = 90,
-  fontSize = 44,
+  fontSize = 28,
   fontWeight = 800,
-  letterSpacing = 3,
+  letterSpacing = 4,
   uppercase = true,
   color = '#ffffff',
   ribbon = true,
   ribbonColor = '#c45838', // Orange theme
-  ribbonWidth = 86,
+  ribbonWidth = 52,
   pauseOnHover = true,
   className = '',
   style = {}
@@ -77,10 +77,10 @@ const TextLoop = ({
 
   const d = useMemo(() => path || buildPath(shape, curviness, ribbonWidth), [path, shape, curviness, ribbonWidth]);
 
-  // Enhanced wide spacing between words/cities
+  // Enhanced wide spacing between words/countries/cities
   const unit = useMemo(() => {
     const base = uppercase ? String(text).toUpperCase() : String(text);
-    const gap = separator ? `\u00A0\u00A0\u00A0\u00A0${separator}\u00A0\u00A0\u00A0\u00A0` : '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
+    const gap = separator ? `\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0${separator}\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0` : '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
     return `${base}${gap}`;
   }, [text, separator, uppercase]);
 
