@@ -3,11 +3,11 @@ import { gsap } from 'gsap';
 
 import './TextLoop.css';
 
-const VIEW_W = 1400;
-const VIEW_H = 360;
+const VIEW_W = 1200;
+const VIEW_H = 520;
 const CX = VIEW_W / 2;
 const CY = VIEW_H / 2;
-const EDGE_PAD = 8;
+const EDGE_PAD = 6;
 
 const buildPath = (shape, curviness, ribbonWidth) => {
   const c = Math.max(0, curviness);
@@ -15,11 +15,11 @@ const buildPath = (shape, curviness, ribbonWidth) => {
 
   switch (shape) {
     case 'circle': {
-      const r = Math.min(100 + c * 0.95, room);
+      const r = Math.min(90 + c * 0.95, room);
       return `M ${CX - r} ${CY} A ${r} ${r} 0 1 1 ${CX + r} ${CY} A ${r} ${r} 0 1 1 ${CX - r} ${CY} Z`;
     }
     case 'infinity': {
-      const r = 160 + c * 1.4;
+      const r = 150 + c * 1.4;
       const h = Math.min(60 + c * 0.95, room);
       return [
         `M ${CX} ${CY}`,
@@ -31,15 +31,15 @@ const buildPath = (shape, curviness, ribbonWidth) => {
       ].join(' ');
     }
     case 'arch': {
-      const rise = Math.min(100 + c * 1.1, room * 1.5);
-      return `M 80 ${CY + rise / 2} Q ${CX} ${CY - rise * 1.4} ${VIEW_W - 80} ${CY + rise / 2}`;
+      const rise = Math.min(120 + c * 1.1, room * 2);
+      return `M 120 ${CY + rise / 2} Q ${CX} ${CY - rise * 1.5} ${VIEW_W - 120} ${CY + rise / 2}`;
     }
     case 'line':
-      return `M -300 ${CY} L ${VIEW_W + 300} ${CY}`;
+      return `M -320 ${CY} L ${VIEW_W + 320} ${CY}`;
     case 'wave':
     default: {
-      const a = Math.min(c * 1.4, room * 1.4);
-      return `M -300 ${CY} Q 50 ${CY - a} 350 ${CY} T 700 ${CY} T 1050 ${CY} T 1400 ${CY} T ${VIEW_W + 300} ${CY}`;
+      const a = Math.min(c * 2.2, room * 2);
+      return `M -320 ${CY} Q -160 ${CY - a} 0 ${CY} T 320 ${CY} T 640 ${CY} T 960 ${CY} T 1280 ${CY} T ${VIEW_W + 320} ${CY}`;
     }
   }
 };
@@ -48,18 +48,18 @@ const TextLoop = ({
   text = 'Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu',
   shape = 'wave',
   path,
-  speed = 80,
+  speed = 90,
   direction = 'forward',
   separator = '✦',
-  curviness = 65,
-  fontSize = 36,
+  curviness = 90,
+  fontSize = 44,
   fontWeight = 800,
-  letterSpacing = 4,
+  letterSpacing = 3,
   uppercase = true,
   color = '#ffffff',
   ribbon = true,
-  ribbonColor = '#c45838', // Theme clay/orange
-  ribbonWidth = 76,
+  ribbonColor = '#c45838', // Orange theme
+  ribbonWidth = 86,
   pauseOnHover = true,
   className = '',
   style = {}
@@ -77,9 +77,10 @@ const TextLoop = ({
 
   const d = useMemo(() => path || buildPath(shape, curviness, ribbonWidth), [path, shape, curviness, ribbonWidth]);
 
+  // Enhanced wide spacing between words/cities
   const unit = useMemo(() => {
     const base = uppercase ? String(text).toUpperCase() : String(text);
-    const gap = separator ? `\u00A0\u00A0${separator}\u00A0\u00A0` : '\u00A0\u00A0\u00A0\u00A0';
+    const gap = separator ? `\u00A0\u00A0\u00A0\u00A0${separator}\u00A0\u00A0\u00A0\u00A0` : '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
     return `${base}${gap}`;
   }, [text, separator, uppercase]);
 

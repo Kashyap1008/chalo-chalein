@@ -51,22 +51,22 @@ export default function HomePage() {
         </Link>
 
         {/* Dynamic Animated Destination Ribbon (Border to Border & Center Aligned) */}
-        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-6 py-2 flex items-center justify-center">
+        <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-4 py-2 flex items-center justify-center">
           <TextLoop
             text="Goa ✦ Manali ✦ Jaipur ✦ Udaipur ✦ Varanasi ✦ Leh-Ladakh ✦ Paris ✦ Rome ✦ Kyoto ✦ Bangkok ✦ Dubai ✦ Kathmandu ✦ Rishikesh ✦ Amritsar ✦ Agra"
             shape="wave"
-            speed={80}
+            speed={90}
             direction="forward"
             separator="✦"
-            curviness={65}
-            fontSize={36}
+            curviness={90}
+            fontSize={44}
             fontWeight={800}
-            letterSpacing={4}
+            letterSpacing={3}
             uppercase
             color="#ffffff"
             ribbon
             ribbonColor="#c45838"
-            ribbonWidth={76}
+            ribbonWidth={86}
             pauseOnHover
           />
         </div>
