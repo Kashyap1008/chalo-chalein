@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import HomePage from "./pages/HomePage";
@@ -17,73 +18,78 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<RegisterPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="min-h-screen bg-[#0f172a]">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedRoute>
-              <AdminDashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/trips"
-          element={
-            <ProtectedRoute>
-              <TripListPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/trips/new"
-          element={
-            <ProtectedRoute>
-              <CreateTripPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/itinerary-builder"
-          element={
-            <ProtectedRoute>
-              <ItineraryBuilderPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/discovery"
-          element={
-            <ProtectedRoute>
-              <DiscoverySearchPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/shared-itinerary" element={<PublicSharedItineraryPage />} />
-        <Route path="/share/:shareId" element={<PublicSharedItineraryPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AuthProvider>
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin-dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips"
+              element={
+                <ProtectedRoute>
+                  <TripListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trips/new"
+              element={
+                <ProtectedRoute>
+                  <CreateTripPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/itinerary-builder"
+              element={
+                <ProtectedRoute>
+                  <ItineraryBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/discovery"
+              element={
+                <ProtectedRoute>
+                  <DiscoverySearchPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/shared-itinerary" element={<PublicSharedItineraryPage />} />
+            <Route path="/share/:shareId" element={<PublicSharedItineraryPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
