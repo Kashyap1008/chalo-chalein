@@ -8,23 +8,40 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const storedUser = localStorage.getItem("user");
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.removeItem("user");
+    const initAuth = async () => {
+      const token = localStorage.getItem("access_token");
+      const storedUser = localStorage.getItem("user");
+      if (token) {
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch {
+            localStorage.removeItem("user");
+          }
+        }
+        try {
+          const res = await axios.get("/auth/profile/");
+          setUser(res.data);
+          localStorage.setItem("user", JSON.stringify(res.data));
+        } catch (e) {
+          // If profile fetch fails and refresh fails, user will be logged out by interceptor
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const persistSession = (data) => {
-    localStorage.setItem("access_token", data.access);
-    localStorage.setItem("refresh_token", data.refresh);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    setUser(data.user);
+    const access = data.access || data.tokens?.access;
+    const refresh = data.refresh || data.tokens?.refresh;
+    if (access) localStorage.setItem("access_token", access);
+    if (refresh) localStorage.setItem("refresh_token", refresh);
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser(data.user);
+    }
   };
 
   const login = async (email, password) => {
@@ -33,8 +50,14 @@ export function AuthProvider({ children }) {
     return res.data;
   };
 
-  const signup = async ({ name, email, password }) => {
-    const res = await axios.post("/auth/signup/", { name, email, password });
+  const signup = async ({ name, email, password, username }) => {
+    const res = await axios.post("/auth/signup/", {
+      name,
+      email,
+      password,
+      password2: password,
+      username: username || (name ? name.replace(/\s+/g, "_").toLowerCase() : undefined),
+    });
     persistSession(res.data);
     return res.data;
   };

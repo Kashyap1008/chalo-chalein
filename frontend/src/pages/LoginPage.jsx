@@ -22,18 +22,23 @@ export default function LoginPage() {
     setError("");
 
     if (!form.email.trim() || !form.password) {
-      setError("Enter your email and password.");
+      setError("Enter your email or username and password.");
       return;
     }
 
     setSubmitting(true);
     try {
-      await login(form.email, form.password);
+      await login(form.email.trim(), form.password);
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err.response?.data?.detail || "Couldn't log in. Check your credentials."
-      );
+      const data = err.response?.data;
+      let msg = "Couldn't log in. Check your credentials.";
+      if (data) {
+        if (typeof data === "string") msg = data;
+        else if (data.detail) msg = data.detail;
+        else if (data.non_field_errors) msg = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : data.non_field_errors;
+      }
+      setError(msg);
     } finally {
       setSubmitting(false);
     }

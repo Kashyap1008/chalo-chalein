@@ -18,7 +18,8 @@ export default function TripListPage() {
       setError("");
       try {
         const res = await axios.get("/trips/");
-        if (isMounted) setTrips(res.data);
+        const tripList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        if (isMounted) setTrips(tripList);
       } catch (err) {
         if (isMounted) setError("Couldn't load your trips. Try refreshing.");
       } finally {

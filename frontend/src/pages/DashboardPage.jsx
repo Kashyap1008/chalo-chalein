@@ -19,8 +19,9 @@ export default function DashboardPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("/trips/?limit=3");
-        if (isMounted) setTrips(res.data);
+        const res = await axios.get("/trips/");
+        const tripList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+        if (isMounted) setTrips(tripList.slice(0, 3));
       } catch (err) {
         if (isMounted) setError("Couldn't load your trips. Try refreshing.");
       } finally {

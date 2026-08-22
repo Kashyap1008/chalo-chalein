@@ -38,17 +38,22 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)
+        user_data = UserSerializer(user, context={'request': request}).data
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
         return Response({
-            'user': UserSerializer(user).data,
+            'user': user_data,
+            'access': access_token,
+            'refresh': refresh_token,
             'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
+                'refresh': refresh_token,
+                'access': access_token,
             }
         }, status=status.HTTP_201_CREATED)
 
 
-class ProfileView(generics.RetrieveUpdateAPIView):
-    """Get or update the authenticated user's profile."""
+class ProfileView(generics.RetrieveUpdateDestroyAPIView):
+    """Get, update, or delete the authenticated user's profile."""
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -101,7 +106,7 @@ class UserListView(generics.ListAPIView):
     Used by the admin/analytics dashboard.
     """
     serializer_class = UserListSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     queryset = User.objects.all().order_by('-created_at')
 
     def get_queryset(self):

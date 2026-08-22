@@ -58,9 +58,23 @@ export default function RegisterPage() {
       });
       navigate("/dashboard");
     } catch (err) {
-      setSubmitError(
-        err.response?.data?.detail || "Couldn't create your account. Try again."
-      );
+      const data = err.response?.data;
+      let msg = "Couldn't create your account. Try again.";
+      if (data) {
+        if (typeof data === "string") msg = data;
+        else if (data.detail) msg = data.detail;
+        else if (data.email) msg = Array.isArray(data.email) ? data.email[0] : data.email;
+        else if (data.password) msg = Array.isArray(data.password) ? data.password[0] : data.password;
+        else if (data.non_field_errors) msg = Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : data.non_field_errors;
+        else {
+          const firstKey = Object.keys(data)[0];
+          if (firstKey) {
+            const val = data[firstKey];
+            msg = Array.isArray(val) ? val[0] : val;
+          }
+        }
+      }
+      setSubmitError(msg);
     } finally {
       setSubmitting(false);
     }

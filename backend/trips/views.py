@@ -179,14 +179,13 @@ class TripBudgetView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request, trip_id):
-        trip = None
-        if request.user.is_authenticated:
-            trip = Trip.objects.filter(id=trip_id, owner=request.user).first()
+        # Look up by ID or share_code
+        trip = Trip.objects.filter(id=trip_id).first()
         if not trip:
-            trip = Trip.objects.filter(id=trip_id, is_public=True).first()
+            trip = Trip.objects.filter(share_code=str(trip_id)).first()
 
         if not trip:
-            return Response({'detail': 'Trip not found or access denied.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Trip not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         # Parse travelers count (default: 1)
         try:

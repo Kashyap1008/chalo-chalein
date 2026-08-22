@@ -1,283 +1,406 @@
-import { useState, useEffect } from 'react';
-import api from '../api/axios';
+import React, { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "../api/axios";
+import Navbar from "../components/Navbar";
+import Button from "../components/Button";
+import GlassCard from "../components/GlassCard";
 
-const AdminDashboardPage = () => {
+export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchAdminData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [statsRes, usersRes] = await Promise.all([
-        api.get('/auth/stats/'),
-        api.get('/auth/users/'),
-      ]);
-      setStats(statsRes.data);
-      setUsers(usersRes.data.results || usersRes.data);
-    } catch (err) {
-      console.error('Failed to load admin analytics:', err);
-      setError('Failed to fetch admin statistics. Please verify backend connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [userSearch, setUserSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("overview"); // overview | users | destinations
 
   useEffect(() => {
-    fetchAdminData();
+    async function loadAdminData() {
+      try {
+        setLoading(true);
+        const [statsRes, usersRes, citiesRes, actsRes] = await Promise.all([
+          axios.get("/auth/stats/"),
+          axios.get("/auth/users/"),
+          axios.get("/catalog/cities/"),
+          axios.get("/catalog/activities/"),
+        ]);
+        setStats(statsRes.data);
+        const uList = Array.isArray(usersRes.data) ? usersRes.data : (usersRes.data?.results || []);
+        const cList = Array.isArray(citiesRes.data) ? citiesRes.data : (citiesRes.data?.results || []);
+        const aList = Array.isArray(actsRes.data) ? actsRes.data : (actsRes.data?.results || []);
+        setUsers(uList);
+        setCities(cList);
+        setActivities(aList);
+      } catch (err) {
+        console.error("Admin data fetch error", err);
+        toast.error("Could not load administrative stats.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAdminData();
   }, []);
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return users;
+    const q = userSearch.toLowerCase();
+    return users.filter(
+      (u) =>
+        u.email?.toLowerCase().includes(q) ||
+        u.username?.toLowerCase().includes(q) ||
+        u.name?.toLowerCase().includes(q)
+    );
+  }, [users, userSearch]);
+
+  const totalCatalogEst = useMemo(() => {
+    return activities.reduce((acc, act) => acc + parseFloat(act.cost || 0), 0);
+  }, [activities]);
+
+  const formatDate = (val) => {
+    if (!val) return "Just now";
+    return new Date(val).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+    <div className="min-h-screen bg-paper text-ink pb-24">
+      <Navbar />
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-24">
+        {/* Admin Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-line">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">📊</span>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                Platform Admin Dashboard
-              </h1>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs uppercase tracking-[0.3em] text-clay font-bold">
+                Platform Intelligence
+              </span>
+              <span className="text-xs text-ink/40">•</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                ● Live System Online
+              </span>
             </div>
-            <p className="text-slate-400 text-sm mt-1">
-              Real-time analytics, user accounts directory, and system health overview.
+            <h1 className="font-display text-4xl sm:text-5xl text-ink">
+              Activity & Analytics.
+            </h1>
+            <p className="text-sm text-ink/60 mt-1">
+              Real-time platform metrics, user engagement, and travel trends.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              PostgreSQL Live
-            </span>
+          {/* Quick Tabs */}
+          <div className="flex gap-2 p-1 rounded-xl bg-paper-deep border border-line">
             <button
-              onClick={fetchAdminData}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-sm font-medium transition-all shadow-md cursor-pointer flex items-center gap-2"
+              onClick={() => setActiveTab("overview")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === "overview" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+              }`}
             >
-              🔄 Refresh
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === "users" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+              }`}
+            >
+              Travelers ({users.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("destinations")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${
+                activeTab === "destinations" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"
+              }`}
+            >
+              Destinations ({cities.length})
             </button>
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm">
-            {error}
-          </div>
-        )}
-
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-            <p className="text-slate-400 text-sm font-medium">Fetching platform analytics...</p>
+          <div className="text-center py-20 text-ink/50 animate-pulse text-lg">
+            Compiling platform analytics...
           </div>
         ) : (
           <>
-            {/* Stat Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {/* Stat 1: Users */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    Total Registered Users
+            {/* KPI Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 my-8">
+              <GlassCard className="p-6">
+                <span className="text-xs uppercase tracking-wider text-ink/50 font-semibold block mb-2">
+                  Total Travelers
+                </span>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display text-4xl text-clay font-bold">
+                    {stats?.total_users ?? users.length}
+                  </h3>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    Active
                   </span>
-                  <span className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl text-xl">👥</span>
                 </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-white">{stats?.total_users || users.length || 0}</span>
-                  <span className="text-xs text-emerald-400 font-medium">+100% active</span>
-                </div>
-                <p className="text-slate-500 text-xs mt-2">Verified account profiles</p>
-              </div>
+                <p className="text-xs text-ink/50 mt-2">Registered platform accounts</p>
+              </GlassCard>
 
-              {/* Stat 2: Trips */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    Total Created Trips
+              <GlassCard className="p-6">
+                <span className="text-xs uppercase tracking-wider text-ink/50 font-semibold block mb-2">
+                  Planned Itineraries
+                </span>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display text-4xl text-ink font-bold">
+                    {stats?.total_trips ?? 0}
+                  </h3>
+                  <span className="text-xs font-semibold text-clay bg-clay/10 px-2 py-0.5 rounded-full">
+                    Real-time
                   </span>
-                  <span className="p-2 bg-purple-500/10 text-purple-400 rounded-xl text-xl">✈️</span>
                 </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-white">{stats?.total_trips || 0}</span>
-                  <span className="text-xs text-purple-400 font-medium">Multi-city plans</span>
-                </div>
-                <p className="text-slate-500 text-xs mt-2">Across all active itineraries</p>
-              </div>
+                <p className="text-xs text-ink/50 mt-2">Multi-city customized trips</p>
+              </GlassCard>
 
-              {/* Stat 3: Top Destination */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    Top Destination
-                  </span>
-                  <span className="p-2 bg-amber-500/10 text-amber-400 rounded-xl text-xl">🏰</span>
-                </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-white">
-                    {stats?.top_cities?.[0]?.name || 'Jaipur'}
-                  </span>
-                  <span className="text-xs text-amber-400 font-medium">
-                    {stats?.top_cities?.[0]?.country || 'India'}
+              <GlassCard className="p-6">
+                <span className="text-xs uppercase tracking-wider text-ink/50 font-semibold block mb-2">
+                  Destinations Catalog
+                </span>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display text-4xl text-ink font-bold">
+                    {cities.length}
+                  </h3>
+                  <span className="text-xs font-semibold text-ink/70 bg-paper-deep px-2 py-0.5 rounded-full">
+                    {activities.length} Activities
                   </span>
                 </div>
-                <p className="text-slate-500 text-xs mt-2">Most visited city stop</p>
-              </div>
+                <p className="text-xs text-ink/50 mt-2">Curated global and Indian cities</p>
+              </GlassCard>
 
-              {/* Stat 4: System Status */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-slate-700 transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                    API & DB Engine
+              <GlassCard className="p-6">
+                <span className="text-xs uppercase tracking-wider text-ink/50 font-semibold block mb-2">
+                  Avg Activity Value
+                </span>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="font-display text-4xl text-emerald-800 font-bold">
+                    ₹{activities.length ? Math.round(totalCatalogEst / activities.length) : 0}
+                  </h3>
+                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    INR
                   </span>
-                  <span className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl text-xl">⚡</span>
                 </div>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-emerald-400">99.9%</span>
-                  <span className="text-xs text-emerald-400 font-medium">PostgreSQL</span>
-                </div>
-                <p className="text-slate-500 text-xs mt-2">JWT SimpleJWT Auth Active</p>
-              </div>
+                <p className="text-xs text-ink/50 mt-2">Mean cost per scheduled activity</p>
+              </GlassCard>
             </div>
 
-            {/* Top Destinations Section */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <span>🌟</span> Top Visited Cities (Analytics)
-                  </h2>
-                  <p className="text-xs text-slate-400">Destinations most frequently scheduled in trip stops</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {stats?.top_cities && stats.top_cities.length > 0 ? (
-                  stats.top_cities.map((city, idx) => (
-                    <div
-                      key={city.id || idx}
-                      className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 flex items-center justify-between hover:bg-slate-800 transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 text-xs font-bold flex items-center justify-center">
-                          #{idx + 1}
+            {/* TAB 1: OVERVIEW */}
+            {activeTab === "overview" && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Top Destinations */}
+                <div className="lg:col-span-2 space-y-6">
+                  <GlassCard className="p-7">
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-clay">
+                          Travel Trends
                         </span>
-                        <div>
-                          <h4 className="font-bold text-slate-200 text-sm">{city.name}</h4>
-                          <p className="text-xs text-slate-400">{city.country}</p>
-                        </div>
+                        <h2 className="font-display text-2xl text-ink font-bold mt-1">
+                          Most Popular Destinations
+                        </h2>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                        {city.visit_count} stops
+                      <Link to="/discover" className="text-xs font-semibold text-clay hover:underline">
+                        View All →
+                      </Link>
+                    </div>
+
+                    <div className="space-y-4">
+                      {cities.slice(0, 5).map((c, i) => {
+                        const score = c.popularity || (100 - i * 8);
+                        return (
+                          <div key={c.id} className="space-y-1.5">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="font-semibold text-ink">
+                                {i + 1}. {c.name}, {c.country}
+                              </span>
+                              <div className="flex items-center gap-3 text-xs text-ink/60">
+                                <span>🌡️ {c.weather_temp}</span>
+                                <span className="font-bold text-clay">{score}% popularity</span>
+                              </div>
+                            </div>
+                            <div className="w-full bg-paper-deep h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-clay to-amber-600 h-full rounded-full transition-all duration-500"
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </GlassCard>
+
+                  {/* System Health / Quick Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="rounded-2xl border border-line bg-paper-deep/60 p-5">
+                      <p className="text-xs uppercase tracking-wider text-ink/50 font-bold mb-1">
+                        API & Database Engine
+                      </p>
+                      <p className="font-display text-lg text-ink font-bold">
+                        Django 4.2 + SQLite / DRF
+                      </p>
+                      <p className="text-xs text-ink/60 mt-1">
+                        All migrations synced, JWT auth active
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-line bg-paper-deep/60 p-5">
+                      <p className="text-xs uppercase tracking-wider text-ink/50 font-bold mb-1">
+                        Frontend Interface
+                      </p>
+                      <p className="font-display text-lg text-ink font-bold">
+                        React 19 + Vite + Tailwind
+                      </p>
+                      <p className="text-xs text-ink/60 mt-1">
+                        Proxy routing on port 5173
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Registrations Feed */}
+                <div>
+                  <GlassCard className="p-7">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="font-display text-2xl text-ink font-bold">Recent Travelers</h2>
+                      <span className="text-xs bg-paper-deep px-2 py-1 rounded text-ink/60 font-semibold">
+                        Latest
                       </span>
                     </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-6 text-center text-slate-500 text-sm">
-                    No destination metrics aggregated yet.
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* User Directory Table */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <span>👥</span> User Accounts Directory
-                  </h2>
-                  <p className="text-xs text-slate-400">All registered platform users and their trip counts</p>
+                    <div className="space-y-4">
+                      {users.slice(0, 6).map((u) => (
+                        <div
+                          key={u.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-line"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-clay text-white font-display text-sm font-bold flex items-center justify-center shrink-0">
+                            {(u.name || u.username || "U").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-ink truncate">
+                              {u.name || u.username}
+                            </p>
+                            <p className="text-xs text-ink/50 truncate">{u.email}</p>
+                          </div>
+                          <span className="text-xs px-2 py-1 rounded-md bg-paper-deep text-ink/70 font-semibold shrink-0">
+                            {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </GlassCard>
                 </div>
+              </div>
+            )}
 
-                <div className="relative w-full sm:w-72">
+            {/* TAB 2: USER DIRECTORY */}
+            {activeTab === "users" && (
+              <GlassCard className="p-7">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="font-display text-2xl text-ink font-bold">Traveler Directory</h2>
+                    <p className="text-xs text-ink/50">List of registered user accounts and trip stats.</p>
+                  </div>
                   <input
                     type="text"
-                    placeholder="Search user by email or username..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
+                    placeholder="Search by name, email, username..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-full sm:w-72 bg-white border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-clay"
                   />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-2.5 text-xs text-slate-500 hover:text-slate-300"
-                    >
-                      ✕
-                    </button>
-                  )}
                 </div>
-              </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto border border-slate-800 rounded-xl">
-                <table className="w-full text-left text-sm text-slate-300">
-                  <thead className="bg-slate-800/80 text-xs font-semibold uppercase text-slate-400 border-b border-slate-700">
-                    <tr>
-                      <th className="px-4 py-3">User</th>
-                      <th className="px-4 py-3">Email</th>
-                      <th className="px-4 py-3">Total Trips</th>
-                      <th className="px-4 py-3">Joined Date</th>
-                      <th className="px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {filteredUsers.length > 0 ? (
-                      filteredUsers.map((u) => (
-                        <tr key={u.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="px-4 py-3 font-medium text-slate-100 flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white shadow-md">
-                              {u.username?.charAt(0)?.toUpperCase() || 'U'}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-slate-200">{u.username}</div>
-                              {u.bio && <div className="text-xs text-slate-500 truncate max-w-xs">{u.bio}</div>}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-line text-xs uppercase text-ink/50 font-semibold tracking-wider">
+                        <th className="py-3 px-2">Traveler</th>
+                        <th className="py-3 px-2">Email</th>
+                        <th className="py-3 px-2">Trips Planned</th>
+                        <th className="py-3 px-2">Joined</th>
+                        <th className="py-3 px-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {filteredUsers.map((u) => (
+                        <tr key={u.id} className="hover:bg-white/40 transition">
+                          <td className="py-3 px-2 font-bold text-ink">
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-full bg-clay text-white text-xs font-bold flex items-center justify-center">
+                                {(u.name || u.username || "U").charAt(0).toUpperCase()}
+                              </span>
+                              <span>{u.name || u.username}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-slate-300 font-mono text-xs">{u.email}</td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                              {u.trip_count || 0} trips
+                          <td className="py-3 px-2 text-ink/70">{u.email}</td>
+                          <td className="py-3 px-2">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-clay/10 text-clay">
+                              {u.trip_count ?? 0} {u.trip_count === 1 ? "trip" : "trips"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-400">
-                            {new Date(u.created_at || u.date_joined).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <td className="py-3 px-2 text-xs text-ink/50">{formatDate(u.created_at || u.date_joined)}</td>
+                          <td className="py-3 px-2">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
                               Active
                             </span>
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className="px-4 py-8 text-center text-slate-500 text-sm">
-                          No users matched "{searchTerm}"
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </GlassCard>
+            )}
+
+            {/* TAB 3: DESTINATIONS */}
+            {activeTab === "destinations" && (
+              <GlassCard className="p-7">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="font-display text-2xl text-ink font-bold">Catalog Destinations</h2>
+                    <p className="text-xs text-ink/50">Curated destinations and weather profiles.</p>
+                  </div>
+                  <Link to="/discover">
+                    <Button variant="solid" className="!text-xs">Explore Discovery Page</Button>
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {cities.map((city) => (
+                    <div
+                      key={city.id}
+                      className="rounded-xl border border-line bg-white/70 p-4 flex flex-col justify-between shadow-sm"
+                    >
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-display text-lg font-bold text-ink">{city.name}</h3>
+                            <p className="text-xs text-ink/50">{city.country}</p>
+                          </div>
+                          <span className="text-xs px-2 py-0.5 bg-clay/10 text-clay font-bold rounded-full">
+                            ★ {city.popularity}
+                          </span>
+                        </div>
+                        <p className="text-xs text-ink/70 mt-2 line-clamp-2">{city.description}</p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-line text-xs text-ink/60 flex justify-between">
+                        <span>🌡️ {city.weather_temp}</span>
+                        <span>🗓️ {city.best_season}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            )}
           </>
         )}
-      </div>
+      </main>
     </div>
   );
-};
-
-export default AdminDashboardPage;
+}

@@ -102,9 +102,10 @@ class TripDetailSerializer(serializers.ModelSerializer):
 
 class TripCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating trips."""
+    cover_photo_url = serializers.CharField(source='cover_photo', required=False, allow_blank=True)
 
     class Meta:
         model = Trip
         fields = ('id', 'name', 'description', 'start_date', 'end_date',
-                  'cover_photo', 'is_public', 'share_code')
+                  'cover_photo', 'cover_photo_url', 'is_public', 'share_code')
         read_only_fields = ('id', 'share_code')

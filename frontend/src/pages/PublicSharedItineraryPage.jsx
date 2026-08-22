@@ -1,25 +1,244 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
+import Button from "../components/Button";
+import GlassCard from "../components/GlassCard";
 
-const days = [
-  { day: '01', date: 'Sat, Apr 18', title: 'Arrival & first light', stops: [['10:30', 'Check in at Le Marais'], ['13:00', 'Seine river stroll'], ['19:30', 'French bistro dinner']] },
-  { day: '02', date: 'Sun, Apr 19', title: 'Art & landmarks', stops: [['09:00', 'Louvre Museum'], ['13:30', 'Lunch in Saint-Germain'], ['18:30', 'Eiffel Tower at sunset']] },
-  { day: '03', date: 'Mon, Apr 20', title: 'Slow streets & a final toast', stops: [['09:00', 'Montmartre walking tour'], ['15:00', 'Browse local boutiques'], ['20:00', 'Sunset river cruise']] },
-];
+export default function PublicSharedItineraryPage() {
+  const { shareCode } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-const PublicSharedItineraryPage = () => {
-  const { shareId } = useParams();
-  const [copied, setCopied] = useState(false);
-  const shareUrl = `${window.location.origin}/share/${shareId || 'paris-weekend'}`;
-  const copyLink = async () => {
-    try { await navigator.clipboard.writeText(shareUrl); } catch { /* Clipboard may be unavailable in a preview. */ }
-    setCopied(true); toast.success('Share link copied.'); setTimeout(() => setCopied(false), 1800);
+  const [trip, setTrip] = useState(null);
+  const [budget, setBudget] = useState(null);
+  const [travelers, setTravelers] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [cloning, setCloning] = useState(false);
+
+  useEffect(() => {
+    async function loadPublicTrip() {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await axios.get(`/trips/shared/${shareCode}/`);
+        setTrip(res.data);
+
+        // Fetch budget calculation
+        if (res.data?.id) {
+          try {
+            const bRes = await axios.get(`/trips/${res.data.id}/budget/?travelers=${travelers}`);
+            setBudget(bRes.data);
+          } catch (bErr) {
+            console.error("Budget fetch error", bErr);
+          }
+        }
+      } catch (err) {
+        setError("This shared trip could not be found or is not public.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPublicTrip();
+  }, [shareCode, travelers]);
+
+  const copyShareLink = () => {
+    const shareUrl = window.location.href;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Share link copied to clipboard!");
   };
 
-  return <main className="min-h-screen bg-[#07111f] px-4 py-8 text-white sm:px-6 lg:px-10"><div className="mx-auto max-w-5xl"><div className="relative overflow-hidden rounded-[2rem] border border-sky-400/25 bg-gradient-to-br from-sky-400/20 via-slate-900 to-fuchsia-500/10 p-7 sm:p-10"><div className="absolute -right-14 -top-14 text-[11rem] leading-none text-white/5">✦</div><div className="relative"><div className="flex flex-wrap items-center justify-between gap-4"><p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">A Chalo-Chalein story · {shareId || 'shared'}</p><button type="button" onClick={copyLink} className="rounded-xl border border-slate-600 bg-slate-950/40 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-300">{copied ? 'Copied ✓' : 'Copy share link'}</button></div><h1 className="mt-8 max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Paris Weekend Escape</h1><p className="mt-4 max-w-2xl text-lg leading-7 text-slate-300">A relaxed city break by Alicia, built for good walks, better food, and the kind of sunsets you remember.</p><div className="mt-7 flex flex-wrap gap-3 text-sm text-slate-300"><span className="rounded-full bg-slate-950/50 px-3 py-1.5">Paris, France</span><span className="rounded-full bg-slate-950/50 px-3 py-1.5">Apr 18 — Apr 20, 2026</span><span className="rounded-full bg-slate-950/50 px-3 py-1.5">2 travelers</span></div></div></div>
-  <div className="my-8 grid gap-4 sm:grid-cols-3"><div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"><p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trip length</p><p className="mt-2 text-2xl font-bold">3 days</p></div><div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"><p className="text-xs uppercase tracking-[0.2em] text-slate-500">Planned stops</p><p className="mt-2 text-2xl font-bold">9 moments</p></div><div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4"><p className="text-xs uppercase tracking-[0.2em] text-slate-500">Estimated spend</p><p className="mt-2 text-2xl font-bold text-emerald-300">$1,350</p></div></div>
-  <div className="space-y-5">{days.map((day) => <section key={day.day} className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-7"><div className="flex flex-col gap-2 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.25em] text-sky-300">Day {day.day}</p><h2 className="mt-2 text-2xl font-bold">{day.title}</h2></div><span className="text-sm text-slate-500">{day.date}</span></div><div className="mt-5 space-y-3">{day.stops.map(([time, title]) => <div key={`${day.day}-${time}`} className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-4"><span className="w-14 text-sm font-bold text-sky-300">{time}</span><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" /><span className="font-medium text-slate-200">{title}</span></div>)}</div></section>)}</div><p className="py-8 text-center text-sm text-slate-500">Shared with Chalo-Chalein · Make your own journey.</p></div></main>;
-};
+  const handleClone = async () => {
+    if (!isAuthenticated) {
+      toast("Log in to clone this itinerary into your account.", { icon: "🔒" });
+      navigate("/login");
+      return;
+    }
+    setCloning(true);
+    try {
+      const res = await axios.post(`/trips/${trip.id}/clone/`);
+      toast.success("Itinerary cloned to your trips!");
+      navigate(`/trips/${res.data.id}`);
+    } catch (err) {
+      toast.error("Could not clone trip.");
+    } finally {
+      setCloning(false);
+    }
+  };
 
-export default PublicSharedItineraryPage;
+  const formatDate = (val) => {
+    if (!val) return "";
+    return new Date(val).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="text-ink/60 animate-pulse text-lg">Loading shared itinerary...</div>
+      </div>
+    );
+  }
+
+  if (error || !trip) {
+    return (
+      <div className="min-h-screen bg-paper">
+        <Navbar />
+        <div className="max-w-md mx-auto pt-36 px-6 text-center">
+          <h2 className="font-display text-2xl text-ink mb-2">Trip Unavailable</h2>
+          <p className="text-ink/60 mb-6">{error || "The itinerary link is invalid."}</p>
+          <Link to="/">
+            <Button variant="solid">Back to Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-paper text-ink pb-20">
+      <Navbar />
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-24">
+        {/* Banner Card */}
+        <div className="rounded-3xl border border-line bg-gradient-to-br from-paper-deep via-white/80 to-paper p-8 shadow-sm mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <span className="text-xs uppercase tracking-widest text-clay font-bold">
+              Shared Itinerary • by {trip.owner_name || "Traveler"}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="glass" onClick={copyShareLink} className="!text-xs">
+                🔗 Copy Link
+              </Button>
+              <Button variant="solid" onClick={handleClone} loading={cloning} className="!text-xs">
+                📋 Clone to My Trips
+              </Button>
+            </div>
+          </div>
+
+          <h1 className="font-display text-4xl sm:text-5xl text-ink">{trip.name}</h1>
+          <p className="text-ink/70 mt-2 text-base max-w-2xl">{trip.description || "A custom travel plan built with Chalo Chalein."}</p>
+
+          <div className="flex flex-wrap gap-4 mt-6 text-xs text-ink/70">
+            <span className="px-3 py-1.5 rounded-full bg-white/80 border border-line font-medium">
+              🗓️ {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
+            </span>
+            <span className="px-3 py-1.5 rounded-full bg-white/80 border border-line font-medium">
+              📍 {trip.stops?.length || 0} Destination Stop(s)
+            </span>
+            <span className="px-3 py-1.5 rounded-full bg-white/80 border border-line font-medium">
+              💰 Total Est: ₹{budget?.grand_total || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* Budget Pulse Summary */}
+        {budget && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            <GlassCard className="p-5">
+              <span className="text-xs uppercase tracking-wider text-ink/50">Total Budget</span>
+              <p className="font-display text-3xl text-clay mt-1">₹{budget.grand_total}</p>
+            </GlassCard>
+            <GlassCard className="p-5">
+              <div className="flex justify-between items-center">
+                <span className="text-xs uppercase tracking-wider text-ink/50">Per Person</span>
+                <select
+                  value={travelers}
+                  onChange={(e) => setTravelers(parseInt(e.target.value, 10))}
+                  className="bg-white border border-line rounded px-1.5 py-0.5 text-xs"
+                >
+                  {[1, 2, 3, 4, 5, 6, 8].map((n) => (
+                    <option key={n} value={n}>
+                      {n} person
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="font-display text-3xl text-ink mt-1">₹{budget.per_person_total}</p>
+            </GlassCard>
+            <GlassCard className="p-5">
+              <span className="text-xs uppercase tracking-wider text-ink/50">Duration</span>
+              <p className="font-display text-3xl text-ink mt-1">{budget.trip_days} Days</p>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* Stops & Schedule */}
+        <div className="space-y-6">
+          <h2 className="font-display text-2xl text-ink">Itinerary Schedule</h2>
+
+          {trip.stops?.map((stop, idx) => (
+            <div
+              key={stop.id}
+              className="rounded-2xl border border-line bg-white/70 backdrop-blur-md overflow-hidden shadow-sm"
+            >
+              <div className="p-5 bg-paper-deep/50 border-b border-line flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-7 h-7 rounded-full bg-clay text-white text-xs font-bold flex items-center justify-center">
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-xl font-bold text-ink">
+                      {stop.city_detail?.name}, {stop.city_detail?.country}
+                    </h3>
+                    <p className="text-xs text-ink/60">
+                      {formatDate(stop.start_date)} — {formatDate(stop.end_date)}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-sm font-semibold text-clay">
+                  Stay: ₹{stop.stay_cost}
+                </span>
+              </div>
+
+              {stop.city_detail && (
+                <div className="px-5 py-2.5 bg-white/40 border-b border-line/40 text-xs text-ink/60 flex flex-wrap gap-4">
+                  <span>🌡️ {stop.city_detail.weather_temp}</span>
+                  <span>🗓️ Best: {stop.city_detail.best_season}</span>
+                  <span>🎒 {stop.city_detail.packing_tips}</span>
+                </div>
+              )}
+
+              <div className="p-5 space-y-3">
+                {(!stop.trip_activities || stop.trip_activities.length === 0) ? (
+                  <p className="text-xs text-ink/40 italic">No specific activities scheduled for this stop.</p>
+                ) : (
+                  stop.trip_activities.map((act) => (
+                    <div
+                      key={act.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-line bg-paper/40 text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-clay px-2 py-0.5 rounded bg-clay/10">
+                          {act.scheduled_time ? act.scheduled_time.slice(0, 5) : "Day"}
+                        </span>
+                        <div>
+                          <p className="font-semibold text-ink">{act.title}</p>
+                          <p className="text-xs text-ink/50 capitalize">{act.activity_type}</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-emerald-700">
+                        {parseFloat(act.cost) > 0 ? `₹${act.cost}` : "Free"}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer info */}
+        <div className="mt-12 text-center text-xs text-ink/40">
+          Planned with <Link to="/" className="text-clay hover:underline font-semibold">Chalo Chalein</Link> • Build your own trip in minutes.
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -1,210 +1,210 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import GlassCard from "../components/GlassCard";
 
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "hi", label: "Hindi" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-];
-
 export default function ProfilePage() {
   const { user, updateUser, deleteAccount } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: user?.name || "",
+    name: user?.name || user?.first_name || user?.username || "",
     email: user?.email || "",
-    photo_url: user?.photo_url || "",
-    language: user?.language || "en",
+    bio: user?.bio || "",
+    avatar: user?.avatar || "",
   });
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [saveError, setSaveError] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saving, setSaving] = useState(false);
 
+  const [passwordForm, setPasswordForm] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
-  const handleChange = (e) => {
+  const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    setSaveSuccess(false);
   };
 
-  const validate = () => {
-    const errors = {};
-    if (!form.name.trim()) errors.name = "Name is required.";
-    if (!form.email.trim()) {
-      errors.email = "Email is required.";
-    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
-      errors.email = "Enter a valid email address.";
-    }
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setSaveError("");
-    setSaveSuccess(false);
-
-    if (!validate()) return;
-
     setSaving(true);
     try {
-      await updateUser(form);
-      setSaveSuccess(true);
+      await updateUser({
+        name: form.name,
+        bio: form.bio,
+      });
+      toast.success("Profile updated successfully!");
     } catch (err) {
-      setSaveError(
-        err.response?.data?.detail || "Couldn't save your changes. Try again."
-      );
+      toast.error(err.response?.data?.detail || "Could not update profile.");
     } finally {
       setSaving(false);
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!passwordForm.old_password || !passwordForm.new_password) {
+      toast.error("Please fill in current and new password.");
+      return;
+    }
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      toast.error("New passwords do not match.");
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await axios.post("/auth/change-password/", {
+        old_password: passwordForm.old_password,
+        new_password: passwordForm.new_password,
+      });
+      toast.success("Password changed successfully!");
+      setPasswordForm({ old_password: "", new_password: "", confirm_password: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.old_password?.[0] || err.response?.data?.new_password?.[0] || "Failed to update password.");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   const handleDeleteConfirm = async () => {
-    setDeleteError("");
     setDeleting(true);
     try {
       await deleteAccount();
+      toast.success("Account deleted.");
       navigate("/");
     } catch (err) {
-      setDeleteError(
-        err.response?.data?.detail || "Couldn't delete your account. Try again."
-      );
+      toast.error(err.response?.data?.detail || "Could not delete account.");
       setDeleting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper text-ink pb-20">
       <Navbar />
 
-      <main className="max-w-xl mx-auto px-6 pt-28 pb-16">
-        <h1 className="font-display text-3xl text-ink mb-1">Profile & settings</h1>
+      <main className="max-w-2xl mx-auto px-6 pt-24">
+        <h1 className="font-display text-3xl sm:text-4xl text-ink mb-1">Profile & Settings</h1>
         <p className="text-ink/60 mb-8">
-          Update how your account looks and works.
+          Manage your account profile and credentials.
         </p>
 
+        {/* Profile Details Card */}
         <GlassCard className="p-8 mb-8">
-          {saveError && (
-            <div className="mb-5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-              {saveError}
-            </div>
-          )}
-          {saveSuccess && (
-            <div className="mb-5 text-sm text-clay bg-white/40 border border-line rounded-lg px-4 py-3">
-              Saved.
-            </div>
-          )}
-
-          <form onSubmit={handleSave} noValidate className="flex flex-col gap-4">
+          <h2 className="font-display text-xl text-ink mb-4">Personal Info</h2>
+          <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
             <div className="flex items-center gap-4 mb-2">
-              <div className="w-16 h-16 rounded-full bg-paper-deep border border-line overflow-hidden shrink-0 flex items-center justify-center">
-                {form.photo_url ? (
-                  <img
-                    src={form.photo_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <span className="font-display text-xl text-ink/40">
-                    {(form.name || "?").charAt(0).toUpperCase()}
-                  </span>
-                )}
+              <div className="w-16 h-16 rounded-full bg-clay text-white font-display text-2xl font-bold flex items-center justify-center shrink-0">
+                {(form.name || "U").charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
                 <Input
-                  label="Photo URL"
-                  type="url"
-                  name="photo_url"
-                  value={form.photo_url}
-                  onChange={handleChange}
-                  placeholder="https://…"
+                  label="Email (Read-only)"
+                  type="email"
+                  value={form.email}
+                  disabled
+                  className="bg-paper-deep/60"
                 />
               </div>
             </div>
 
             <Input
-              label="Name"
+              label="Display Name"
               type="text"
               name="name"
               value={form.name}
-              onChange={handleChange}
-              error={fieldErrors.name}
-              autoComplete="name"
-            />
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              error={fieldErrors.email}
-              autoComplete="email"
+              onChange={handleProfileChange}
+              required
             />
 
             <div>
-              <label className="block text-sm font-medium text-ink mb-1">
-                Language
-              </label>
-              <select
-                name="language"
-                value={form.language}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-line bg-white/60 px-4 py-2.5 text-ink focus:outline-none focus:ring-2 focus:ring-clay"
-              >
-                {LANGUAGES.map((l) => (
-                  <option key={l.value} value={l.value}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-ink mb-1">Bio</label>
+              <textarea
+                name="bio"
+                value={form.bio}
+                onChange={handleProfileChange}
+                rows={3}
+                placeholder="Tell other travelers a little about yourself..."
+                className="w-full rounded-lg border border-line bg-white/60 px-4 py-2 text-ink text-sm outline-none focus:ring-2 focus:ring-clay resize-none"
+              />
             </div>
 
-            <Button type="submit" variant="solid" loading={saving} className="mt-2 self-start">
-              Save changes
+            <Button type="submit" variant="solid" loading={saving} className="self-start mt-2">
+              Save Profile
             </Button>
           </form>
         </GlassCard>
 
-        <GlassCard className="p-8">
-          <h2 className="font-display text-lg text-ink mb-1">Delete account</h2>
+        {/* Change Password Card */}
+        <GlassCard className="p-8 mb-8">
+          <h2 className="font-display text-xl text-ink mb-4">Change Password</h2>
+          <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+            <Input
+              label="Current Password"
+              type="password"
+              name="old_password"
+              value={passwordForm.old_password}
+              onChange={handlePasswordChange}
+              required
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="New Password"
+                type="password"
+                name="new_password"
+                value={passwordForm.new_password}
+                onChange={handlePasswordChange}
+                required
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                name="confirm_password"
+                value={passwordForm.confirm_password}
+                onChange={handlePasswordChange}
+                required
+              />
+            </div>
+            <Button type="submit" variant="solid" loading={changingPassword} className="self-start mt-2">
+              Update Password
+            </Button>
+          </form>
+        </GlassCard>
+
+        {/* Danger Zone */}
+        <GlassCard className="p-8 border-red-200">
+          <h2 className="font-display text-xl text-red-700 mb-1">Delete Account</h2>
           <p className="text-sm text-ink/60 mb-4">
-            This permanently removes your account and every trip you've created.
-            This can't be undone.
+            Permanently remove your account and all associated trips and custom itineraries.
           </p>
 
-          {deleteError && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-              {deleteError}
-            </div>
-          )}
-
           {!confirmingDelete ? (
-            <Button variant="ghost" onClick={() => setConfirmingDelete(true)}>
-              Delete my account
+            <Button variant="ghost" onClick={() => setConfirmingDelete(true)} className="text-red-600 hover:text-red-700">
+              Delete My Account
             </Button>
           ) : (
             <div className="flex items-center gap-4">
-              <span className="text-sm text-ink/70">Are you sure?</span>
+              <span className="text-sm text-ink/70">Are you completely sure?</span>
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleting}
-                className="text-sm text-red-600 font-medium hover:underline disabled:opacity-50"
+                className="text-sm text-red-600 font-bold hover:underline"
               >
-                {deleting ? "Deleting…" : "Yes, delete it"}
+                {deleting ? "Deleting…" : "Yes, Delete It"}
               </button>
               <button
                 onClick={() => setConfirmingDelete(false)}

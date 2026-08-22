@@ -1,144 +1,752 @@
-import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import axios from "../api/axios";
+import Navbar from "../components/Navbar";
+import Button from "../components/Button";
+import GlassCard from "../components/GlassCard";
+import Input from "../components/Input";
 
-const initialDays = [
-  { id: 1, date: '2026-04-18', label: 'Arrival day', activities: [
-    { id: 11, time: '10:30', title: 'Check in at Le Marais', type: 'Stay', cost: 140 },
-    { id: 12, time: '13:00', title: 'Seine river stroll', type: 'Explore', cost: 18 },
-    { id: 13, time: '19:30', title: 'French bistro dinner', type: 'Food', cost: 42 },
-  ] },
-  { id: 2, date: '2026-04-19', label: 'Art & landmarks', activities: [
-    { id: 21, time: '09:00', title: 'Louvre museum pass', type: 'Culture', cost: 22 },
-    { id: 22, time: '13:30', title: 'Lunch in Saint-Germain', type: 'Food', cost: 26 },
-    { id: 23, time: '18:30', title: 'Eiffel Tower at sunset', type: 'Experience', cost: 35 },
-  ] },
+const ACTIVITY_TYPE_OPTIONS = [
+  { value: "sightseeing", label: "Sightseeing" },
+  { value: "food", label: "Food & Dining" },
+  { value: "adventure", label: "Adventure" },
+  { value: "culture", label: "Culture & Heritage" },
+  { value: "stay", label: "Stay & Accommodation" },
+  { value: "transport", label: "Transport" },
+  { value: "shopping", label: "Shopping" },
+  { value: "other", label: "Other" },
 ];
 
-const baseCosts = { flights: 540, stay: 280, transport: 90 };
+export default function ItineraryBuilderPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-const formatDate = (value) => value
-  ? new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(`${value}T12:00:00`))
-  : 'Choose a date';
+  const [trip, setTrip] = useState(null);
+  const [budget, setBudget] = useState(null);
+  const [cities, setCities] = useState([]);
+  const [catalogActivities, setCatalogActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [travelers, setTravelers] = useState(1);
+  const [activeTab, setActiveTab] = useState("timeline"); // timeline | budget | settings
 
-const ItineraryBuilderPage = () => {
-  const [trip, setTrip] = useState({ name: 'Paris Weekend Escape', destination: 'Paris, France', startDate: '2026-04-18', endDate: '2026-04-20', travelers: 2 });
-  const [days, setDays] = useState(initialDays);
-  const [errors, setErrors] = useState({});
-  const [activeDay, setActiveDay] = useState(1);
-  const [viewMode, setViewMode] = useState('timeline');
-  const [isSaved, setIsSaved] = useState(false);
+  // Modal States
+  const [showAddStopModal, setShowAddStopModal] = useState(false);
+  const [newStopForm, setNewStopForm] = useState({
+    city: "",
+    start_date: "",
+    end_date: "",
+    stay_cost: 0,
+    notes: "",
+  });
+
+  const [selectedStopForActivity, setSelectedStopForActivity] = useState(null);
+  const [showAddActivityModal, setShowAddActivityModal] = useState(false);
+  const [newActivityForm, setNewActivityForm] = useState({
+    title: "",
+    activity_type: "sightseeing",
+    cost: 0,
+    scheduled_date: "",
+    scheduled_time: "10:00",
+    notes: "",
+    activity: null,
+  });
+
+  const [editingTripForm, setEditingTripForm] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    cover_photo: "",
+    is_public: false,
+  });
+
+  // Fetch full trip data and budget
+  const loadTripData = async () => {
+    try {
+      setError("");
+      const [tripRes, budgetRes] = await Promise.all([
+        axios.get(`/trips/${id}/`),
+        axios.get(`/trips/${id}/budget/?travelers=${travelers}`),
+      ]);
+      setTrip(tripRes.data);
+      setBudget(budgetRes.data);
+      setEditingTripForm({
+        name: tripRes.data.name || "",
+        description: tripRes.data.description || "",
+        start_date: tripRes.data.start_date || "",
+        end_date: tripRes.data.end_date || "",
+        cover_photo: tripRes.data.cover_photo || "",
+        is_public: tripRes.data.is_public || false,
+      });
+    } catch (err) {
+      setError("Failed to load trip details. It may not exist or you lack permission.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const savedExperiences = JSON.parse(localStorage.getItem('chalo:selected-experiences') || '[]');
-    if (!savedExperiences.length) return;
+    loadTripData();
+  }, [id, travelers]);
 
-    setDays((current) => current.map((day, index) => index === 0
-      ? {
-        ...day,
-        activities: [
-          ...day.activities,
-          ...savedExperiences.map((experience, offset) => ({
-            id: `${experience.id}-${offset}`,
-            time: '15:00',
-            title: experience.name,
-            type: experience.category,
-            cost: experience.cost,
-          })),
-        ],
+  // Fetch cities and activities for catalog pickers
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const [cRes, aRes] = await Promise.all([
+          axios.get("/catalog/cities/"),
+          axios.get("/catalog/activities/"),
+        ]);
+        const cityList = Array.isArray(cRes.data) ? cRes.data : (cRes.data?.results || []);
+        const actList = Array.isArray(aRes.data) ? aRes.data : (aRes.data?.results || []);
+        setCities(cityList);
+        setCatalogActivities(actList);
+        if (cityList.length > 0) {
+          setNewStopForm((prev) => ({ ...prev, city: cityList[0].id }));
+        }
+      } catch (err) {
+        console.error("Catalog load error", err);
       }
-      : day));
-    localStorage.removeItem('chalo:selected-experiences');
+    }
+    loadCatalog();
   }, []);
 
-  const updateTrip = (field, value) => {
-    setTrip((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: '' }));
-    setIsSaved(false);
+  // Handle Add Stop
+  const handleAddStop = async (e) => {
+    e.preventDefault();
+    if (!newStopForm.city) {
+      toast.error("Please select a city.");
+      return;
+    }
+    try {
+      await axios.post(`/trips/${id}/stops/`, {
+        city: parseInt(newStopForm.city, 10),
+        start_date: newStopForm.start_date || null,
+        end_date: newStopForm.end_date || null,
+        stay_cost: parseFloat(newStopForm.stay_cost) || 0,
+        notes: newStopForm.notes || "",
+        order: (trip?.stops?.length || 0) + 1,
+      });
+      toast.success("Stop added successfully!");
+      setShowAddStopModal(false);
+      setNewStopForm({
+        city: cities[0]?.id || "",
+        start_date: "",
+        end_date: "",
+        stay_cost: 0,
+        notes: "",
+      });
+      loadTripData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Could not add stop.");
+    }
   };
 
-  const validate = () => {
-    const nextErrors = {};
-    if (!trip.name.trim()) nextErrors.name = 'Give your trip a name.';
-    if (!trip.destination.trim()) nextErrors.destination = 'Add a destination.';
-    if (!trip.startDate) nextErrors.startDate = 'Select a start date.';
-    if (!trip.endDate) nextErrors.endDate = 'Select an end date.';
-    if (trip.startDate && trip.endDate && trip.endDate < trip.startDate) nextErrors.endDate = 'End date must be after the start date.';
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+  // Handle Delete Stop
+  const handleDeleteStop = async (stopId) => {
+    if (!window.confirm("Are you sure you want to remove this stop and all its activities?")) return;
+    try {
+      await axios.delete(`/trips/stops/${stopId}/`);
+      toast.success("Stop removed.");
+      loadTripData();
+    } catch (err) {
+      toast.error("Failed to delete stop.");
+    }
   };
 
-  const totals = useMemo(() => {
-    const activities = days.flatMap((day) => day.activities);
-    const activityTotal = activities.reduce((sum, activity) => sum + Number(activity.cost || 0), 0);
-    return { activities: activityTotal, food: activities.filter((activity) => activity.type === 'Food').reduce((sum, activity) => sum + Number(activity.cost || 0), 0), total: activityTotal + Object.values(baseCosts).reduce((sum, value) => sum + value, 0) };
-  }, [days]);
-
-  const saveTrip = () => {
-    if (!validate()) { toast.error('Check the highlighted trip details.'); return; }
-    setIsSaved(true);
-    toast.success('Trip saved to your Chalo-Chalein plan.');
+  // Handle Add Activity to Stop
+  const handleAddActivity = async (e) => {
+    e.preventDefault();
+    if (!newActivityForm.title.trim()) {
+      toast.error("Please enter an activity title.");
+      return;
+    }
+    try {
+      await axios.post(`/trips/stops/${selectedStopForActivity}/activities/`, {
+        title: newActivityForm.title,
+        activity_type: newActivityForm.activity_type,
+        cost: parseFloat(newActivityForm.cost) || 0,
+        scheduled_date: newActivityForm.scheduled_date || null,
+        scheduled_time: newActivityForm.scheduled_time || null,
+        notes: newActivityForm.notes || "",
+        activity: newActivityForm.activity || null,
+      });
+      toast.success("Activity added!");
+      setShowAddActivityModal(false);
+      setNewActivityForm({
+        title: "",
+        activity_type: "sightseeing",
+        cost: 0,
+        scheduled_date: "",
+        scheduled_time: "10:00",
+        notes: "",
+        activity: null,
+      });
+      loadTripData();
+    } catch (err) {
+      toast.error("Failed to add activity.");
+    }
   };
 
-  const addDay = () => {
-    const nextId = days.length + 1;
-    const nextDate = new Date(`${trip.startDate || '2026-04-18'}T12:00:00`);
-    nextDate.setDate(nextDate.getDate() + days.length);
-    setDays((current) => [...current, { id: nextId, date: nextDate.toISOString().slice(0, 10), label: 'New day', activities: [] }]);
-    setActiveDay(nextId);
+  // Handle Delete Activity
+  const handleDeleteActivity = async (actId) => {
+    try {
+      await axios.delete(`/trips/activities/${actId}/`);
+      toast.success("Activity removed.");
+      loadTripData();
+    } catch (err) {
+      toast.error("Failed to delete activity.");
+    }
   };
 
-  const addActivity = (dayId) => setDays((current) => current.map((day) => day.id === dayId
-    ? { ...day, activities: [...day.activities, { id: Date.now(), time: '12:00', title: 'New activity', type: 'Explore', cost: 0 }] }
-    : day));
-
-  const updateActivity = (dayId, activityId, field, value) => {
-    setDays((current) => current.map((day) => day.id === dayId
-      ? { ...day, activities: day.activities.map((activity) => activity.id === activityId ? { ...activity, [field]: field === 'cost' ? Number(value) : value } : activity) }
-      : day));
-    setIsSaved(false);
+  // Handle Update Trip Basics
+  const handleSaveTripBasics = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.patch(`/trips/${id}/`, editingTripForm);
+      toast.success("Trip details updated!");
+      loadTripData();
+    } catch (err) {
+      toast.error("Could not update trip.");
+    }
   };
 
-  const removeActivity = (dayId, activityId) => setDays((current) => current.map((day) => day.id === dayId
-    ? { ...day, activities: day.activities.filter((activity) => activity.id !== activityId) }
-    : day));
+  // Handle Clone Trip
+  const handleCloneTrip = async () => {
+    try {
+      const res = await axios.post(`/trips/${id}/clone/`);
+      toast.success("Trip duplicated successfully!");
+      navigate(`/trips/${res.data.id}`);
+    } catch (err) {
+      toast.error("Could not clone trip.");
+    }
+  };
 
-  const inputClass = (field) => `mt-2 w-full rounded-xl border bg-slate-950/70 px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400 ${errors[field] ? 'border-rose-400' : 'border-slate-700'}`;
-  const activeDayPlan = days.find((day) => day.id === activeDay) || days[0];
+  // Copy share link
+  const copyShareLink = () => {
+    const shareUrl = `${window.location.origin}/share/${trip.share_code}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Public share link copied to clipboard!");
+  };
 
-  return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-8 text-white sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-          <div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">Plan your next story</p><h1 className="max-w-2xl text-4xl font-black tracking-tight sm:text-5xl">Build a trip that feels like you.</h1><p className="mt-3 max-w-xl text-slate-400">Shape the route, collect little moments, and keep every rupee or dollar visible before you go.</p></div>
-          <button type="button" onClick={saveTrip} className="rounded-xl bg-cyan-400 px-5 py-3 font-bold text-slate-950 shadow-lg shadow-cyan-400/20 transition hover:bg-cyan-300">{isSaved ? 'Saved ✓' : 'Save itinerary'}</button>
-        </div>
+  const formatDate = (val) => {
+    if (!val) return "Flexible";
+    return new Date(val).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_350px]">
-          <section className="space-y-6">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
-              <div className="mb-5 flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">01 / Trip basics</p><h2 className="mt-1 text-xl font-bold">Set the scene</h2></div><span className="text-2xl text-cyan-300">✦</span></div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block text-sm text-slate-300">Trip name<input aria-invalid={Boolean(errors.name)} value={trip.name} onChange={(event) => updateTrip('name', event.target.value)} className={inputClass('name')} placeholder="e.g. Monsoon in Kerala" />{errors.name && <span className="mt-1 block text-xs text-rose-300">{errors.name}</span>}</label>
-                <label className="block text-sm text-slate-300">Destination<input aria-invalid={Boolean(errors.destination)} value={trip.destination} onChange={(event) => updateTrip('destination', event.target.value)} className={inputClass('destination')} placeholder="City or country" />{errors.destination && <span className="mt-1 block text-xs text-rose-300">{errors.destination}</span>}</label>
-                <label className="block text-sm text-slate-300">Start date<input type="date" value={trip.startDate} onChange={(event) => updateTrip('startDate', event.target.value)} className={inputClass('startDate')} />{errors.startDate && <span className="mt-1 block text-xs text-rose-300">{errors.startDate}</span>}</label>
-                <label className="block text-sm text-slate-300">End date<input type="date" value={trip.endDate} onChange={(event) => updateTrip('endDate', event.target.value)} className={inputClass('endDate')} />{errors.endDate && <span className="mt-1 block text-xs text-rose-300">{errors.endDate}</span>}</label>
-              </div>
-              <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs uppercase tracking-[0.18em] text-slate-500">Travel party</p><p className="mt-1 font-semibold">{trip.travelers} {trip.travelers === 1 ? 'traveler' : 'travelers'}</p></div><input aria-label="Number of travelers" type="range" min="1" max="8" value={trip.travelers} onChange={(event) => updateTrip('travelers', Number(event.target.value))} className="w-full accent-cyan-400 sm:w-48" /></div>
-            </div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="text-ink/60 animate-pulse text-lg">Loading itinerary builder...</div>
+      </div>
+    );
+  }
 
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7">
-              <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">02 / Daily rhythm</p><h2 className="mt-1 text-xl font-bold">Your route, at a glance</h2></div><div className="flex items-center gap-2"><div className="flex rounded-lg border border-slate-700 bg-slate-950 p-1"><button type="button" onClick={() => setViewMode('timeline')} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${viewMode === 'timeline' ? 'bg-cyan-400 text-slate-950' : 'text-slate-400'}`}>Timeline</button><button type="button" onClick={() => setViewMode('calendar')} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${viewMode === 'calendar' ? 'bg-cyan-400 text-slate-950' : 'text-slate-400'}`}>Calendar</button></div><button type="button" onClick={addDay} className="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400">+ Add day</button></div></div>
-              <div className="mb-6 flex gap-2 overflow-x-auto pb-1">{days.map((day) => <button type="button" key={day.id} onClick={() => setActiveDay(day.id)} className={`min-w-28 rounded-xl border px-3 py-2 text-left transition ${activeDay === day.id ? 'border-cyan-400 bg-cyan-400/10' : 'border-slate-800 bg-slate-950/50 hover:border-slate-600'}`}><span className="block text-xs text-slate-500">Day {day.id}</span><span className="mt-1 block text-sm font-semibold">{formatDate(day.date)}</span></button>)}</div>
-              {viewMode === 'timeline' && activeDayPlan && <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4"><div className="mb-4 flex items-center justify-between"><div><h3 className="font-bold">{activeDayPlan.label}</h3><p className="mt-1 text-sm text-slate-500">{formatDate(activeDayPlan.date)} · {activeDayPlan.activities.length} stops</p></div><button type="button" onClick={() => addActivity(activeDayPlan.id)} className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">+ Add stop</button></div><div className="space-y-3">{activeDayPlan.activities.length === 0 && <p className="rounded-xl border border-dashed border-slate-700 p-5 text-center text-sm text-slate-500">This day is open. Add a stop to start exploring.</p>}{activeDayPlan.activities.map((activity) => <div key={activity.id} className="grid gap-3 rounded-xl border border-slate-800 bg-slate-900 p-3 sm:grid-cols-[86px_1fr_120px_72px_28px] sm:items-center"><input aria-label="Activity time" type="time" value={activity.time} onChange={(event) => updateActivity(activeDayPlan.id, activity.id, 'time', event.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-300" /><input aria-label="Activity title" value={activity.title} onChange={(event) => updateActivity(activeDayPlan.id, activity.id, 'title', event.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white" /><select aria-label="Activity type" value={activity.type} onChange={(event) => updateActivity(activeDayPlan.id, activity.id, 'type', event.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-300"><option>Explore</option><option>Culture</option><option>Experience</option><option>Food</option><option>Stay</option></select><label className="flex items-center rounded-lg border border-slate-700 bg-slate-950 px-2 text-sm text-emerald-300">$<input aria-label="Activity cost" type="number" min="0" value={activity.cost} onChange={(event) => updateActivity(activeDayPlan.id, activity.id, 'cost', event.target.value)} className="w-full bg-transparent px-1 py-2 text-right outline-none" /></label><button type="button" aria-label={`Remove ${activity.title}`} onClick={() => removeActivity(activeDayPlan.id, activity.id)} className="text-lg text-slate-600 transition hover:text-rose-300">×</button></div>)}</div></div>}
-              {viewMode === 'calendar' && <div className="grid gap-3 md:grid-cols-2">{days.map((day) => <button type="button" key={day.id} onClick={() => { setActiveDay(day.id); setViewMode('timeline'); }} className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 text-left transition hover:border-cyan-400/70"><div className="flex items-start justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Day {day.id}</p><h3 className="mt-1 font-bold">{day.label}</h3></div><span className="text-sm text-slate-500">{formatDate(day.date)}</span></div><div className="mt-4 space-y-2">{day.activities.length ? day.activities.map((activity) => <div key={activity.id} className="flex items-center gap-2 text-sm text-slate-300"><span className="w-12 text-xs text-slate-500">{activity.time}</span><span className="truncate">{activity.title}</span></div>) : <p className="text-sm text-slate-500">No stops planned</p>}</div></button>)}</div>}
-            </div>
-          </section>
-
-          <aside className="space-y-6"><div className="overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/15 via-slate-900 to-slate-900 p-6"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Trip snapshot</p><h2 className="mt-3 text-2xl font-black">{trip.destination || 'Your destination'}</h2><p className="mt-2 text-sm text-slate-400">{formatDate(trip.startDate)} — {formatDate(trip.endDate)}</p><div className="mt-6 grid grid-cols-2 gap-3"><div className="rounded-xl bg-slate-950/60 p-3"><p className="text-xs text-slate-500">Stops</p><p className="mt-1 text-xl font-bold">{days.reduce((sum, day) => sum + day.activities.length, 0)}</p></div><div className="rounded-xl bg-slate-950/60 p-3"><p className="text-xs text-slate-500">Travelers</p><p className="mt-1 text-xl font-bold">{trip.travelers}</p></div></div></div><div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6"><div className="flex items-center justify-between"><h2 className="text-xl font-bold">Budget pulse</h2><span className="text-xs text-emerald-300">Live estimate</span></div><p className="mt-5 text-4xl font-black tracking-tight">${totals.total.toLocaleString()}</p><p className="mt-1 text-sm text-slate-500">for the whole trip</p><div className="mt-6 space-y-3">{Object.entries({ Flights: baseCosts.flights, Stay: baseCosts.stay, Transport: baseCosts.transport, Activities: totals.activities }).map(([label, value]) => <div key={label}><div className="mb-1 flex justify-between text-sm"><span className="text-slate-400">{label}</span><span className="text-slate-200">${value}</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400" style={{ width: `${Math.max(4, Math.min(100, (value / totals.total) * 100))}%` }} /></div></div>)}</div><div className="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400"><div className="flex justify-between"><span>Food in activities</span><span className="text-slate-200">${totals.food}</span></div></div></div></aside>
+  if (error || !trip) {
+    return (
+      <div className="min-h-screen bg-paper">
+        <Navbar />
+        <div className="max-w-md mx-auto pt-36 px-6 text-center">
+          <h2 className="font-display text-2xl text-ink mb-2">Trip Not Found</h2>
+          <p className="text-ink/60 mb-6">{error || "We couldn't locate this trip."}</p>
+          <Link to="/trips">
+            <Button variant="solid">Back to My Trips</Button>
+          </Link>
         </div>
       </div>
-    </main>
-  );
-};
+    );
+  }
 
-export default ItineraryBuilderPage;
+  return (
+    <div className="min-h-screen bg-paper text-ink pb-20">
+      <Navbar />
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-24">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-line">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs uppercase tracking-widest text-clay font-semibold">
+                Itinerary Builder
+              </span>
+              <span className="text-xs text-ink/40">•</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${trip.is_public ? "bg-emerald-100 text-emerald-800" : "bg-ink/5 text-ink/60"}`}>
+                {trip.is_public ? "Public" : "Private"}
+              </span>
+            </div>
+            <h1 className="font-display text-3xl sm:text-4xl text-ink">{trip.name}</h1>
+            <p className="text-sm text-ink/60 mt-1">
+              {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
+              {trip.description && ` • ${trip.description}`}
+            </p>
+          </div>
+
+          {/* Action Bar */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Button variant="glass" onClick={copyShareLink} className="!text-xs">
+              🔗 Share Link
+            </Button>
+            <Button variant="glass" onClick={handleCloneTrip} className="!text-xs">
+              📋 Clone Trip
+            </Button>
+            <Button variant="solid" onClick={() => setShowAddStopModal(true)} className="!text-xs">
+              + Add City Stop
+            </Button>
+          </div>
+        </div>
+
+        {/* Tab Navigation & Live Stats Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 my-6">
+          <div className="flex gap-2 p-1 rounded-xl bg-paper-deep border border-line w-fit">
+            <button
+              onClick={() => setActiveTab("timeline")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${activeTab === "timeline" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"}`}
+            >
+              Stops & Activities ({trip.stops?.length || 0})
+            </button>
+            <button
+              onClick={() => setActiveTab("budget")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${activeTab === "budget" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"}`}
+            >
+              Budget Breakdown (₹{budget?.grand_total || 0})
+            </button>
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`px-4 py-2 text-xs font-semibold rounded-lg transition ${activeTab === "settings" ? "bg-white text-ink shadow-sm" : "text-ink/60 hover:text-ink"}`}
+            >
+              Settings
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs text-ink/70">
+            <div className="flex items-center gap-2">
+              <span>Travelers:</span>
+              <select
+                value={travelers}
+                onChange={(e) => setTravelers(parseInt(e.target.value, 10))}
+                className="bg-white/80 border border-line rounded-md px-2 py-1 text-xs outline-none"
+              >
+                {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? "person" : "people"}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="font-semibold text-clay">
+              Total: ₹{budget?.grand_total || 0} (₹{budget?.per_person_total || 0}/person)
+            </div>
+          </div>
+        </div>
+
+        {/* TAB 1: STOPS & ACTIVITIES TIMELINE */}
+        {activeTab === "timeline" && (
+          <div className="space-y-6">
+            {(!trip.stops || trip.stops.length === 0) && (
+              <GlassCard className="p-12 text-center">
+                <p className="text-ink/60 mb-4">You haven't added any city stops to this trip yet.</p>
+                <Button variant="solid" onClick={() => setShowAddStopModal(true)}>
+                  Add Your First Destination
+                </Button>
+              </GlassCard>
+            )}
+
+            {trip.stops?.map((stop, index) => (
+              <div
+                key={stop.id}
+                className="rounded-2xl border border-line bg-white/70 backdrop-blur-md shadow-sm overflow-hidden"
+              >
+                {/* Stop Header */}
+                <div className="p-5 bg-paper-deep/60 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-full bg-clay text-white text-xs font-bold flex items-center justify-center shrink-0">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <h3 className="font-display text-xl text-ink">
+                        {stop.city_detail?.name}, {stop.city_detail?.country}
+                      </h3>
+                      <p className="text-xs text-ink/60">
+                        {formatDate(stop.start_date)} — {formatDate(stop.end_date)} • Stay Est: ₹{stop.stay_cost}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    <Button
+                      variant="glass"
+                      onClick={() => {
+                        setSelectedStopForActivity(stop.id);
+                        setShowAddActivityModal(true);
+                      }}
+                      className="!text-xs !py-1.5"
+                    >
+                      + Add Activity
+                    </Button>
+                    <button
+                      onClick={() => handleDeleteStop(stop.id)}
+                      className="text-xs text-red-600 hover:text-red-800 p-2"
+                      title="Remove Stop"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stop Content & Weather Tips */}
+                {stop.city_detail && (
+                  <div className="px-5 py-3 bg-white/40 border-b border-line/50 text-xs text-ink/70 flex flex-wrap gap-4">
+                    <span>🌡️ {stop.city_detail.weather_temp} ({stop.city_detail.weather_condition})</span>
+                    <span>🗓️ Best Season: {stop.city_detail.best_season}</span>
+                    <span>🎒 Tips: {stop.city_detail.packing_tips}</span>
+                  </div>
+                )}
+
+                {/* Activities List */}
+                <div className="p-5 space-y-3">
+                  {(!stop.trip_activities || stop.trip_activities.length === 0) ? (
+                    <p className="text-xs text-ink/40 italic py-2">
+                      No activities planned for this stop yet. Click "+ Add Activity" or explore the catalog.
+                    </p>
+                  ) : (
+                    stop.trip_activities.map((act) => (
+                      <div
+                        key={act.id}
+                        className="flex items-center justify-between gap-4 p-3 rounded-xl border border-line bg-paper/40 hover:bg-paper/80 transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono text-clay px-2 py-1 rounded bg-clay/10">
+                            {act.scheduled_time ? act.scheduled_time.slice(0, 5) : "All Day"}
+                          </span>
+                          <div>
+                            <p className="font-semibold text-sm text-ink">{act.title}</p>
+                            <p className="text-xs text-ink/50 capitalize">
+                              {act.activity_type} {act.notes && `• ${act.notes}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-bold text-emerald-700">
+                            {parseFloat(act.cost) > 0 ? `₹${act.cost}` : "Free"}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteActivity(act.id)}
+                            className="text-ink/40 hover:text-red-600 text-sm font-bold"
+                            title="Delete activity"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* TAB 2: BUDGET BREAKDOWN */}
+        {activeTab === "budget" && budget && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <GlassCard className="p-5">
+                <span className="text-xs uppercase text-ink/50 tracking-wider">Grand Total</span>
+                <p className="font-display text-3xl text-clay mt-1">₹{budget.grand_total}</p>
+              </GlassCard>
+              <GlassCard className="p-5">
+                <span className="text-xs uppercase text-ink/50 tracking-wider">Per Person</span>
+                <p className="font-display text-3xl text-ink mt-1">₹{budget.per_person_total}</p>
+                <p className="text-xs text-ink/50 mt-1">Split across {travelers} traveler(s)</p>
+              </GlassCard>
+              <GlassCard className="p-5">
+                <span className="text-xs uppercase text-ink/50 tracking-wider">Daily Average</span>
+                <p className="font-display text-3xl text-ink mt-1">₹{budget.daily_average}</p>
+                <p className="text-xs text-ink/50 mt-1">Over {budget.trip_days} trip days</p>
+              </GlassCard>
+              <GlassCard className="p-5">
+                <span className="text-xs uppercase text-ink/50 tracking-wider">Daily Per Person</span>
+                <p className="font-display text-3xl text-ink mt-1">₹{budget.daily_per_person}</p>
+              </GlassCard>
+            </div>
+
+            {/* Category Breakdown */}
+            <GlassCard className="p-6">
+              <h3 className="font-display text-xl text-ink mb-4">Spend by Category</h3>
+              <div className="space-y-3">
+                {Object.entries(budget.by_category || {}).map(([cat, amount]) => {
+                  const percent = budget.grand_total > 0 ? ((amount / budget.grand_total) * 100).toFixed(1) : 0;
+                  return (
+                    <div key={cat} className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="capitalize">{cat}</span>
+                        <span>₹{amount} ({percent}%)</span>
+                      </div>
+                      <div className="w-full bg-paper-deep h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-clay h-full rounded-full transition-all"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </GlassCard>
+
+            {/* City Stop Breakdown */}
+            <GlassCard className="p-6">
+              <h3 className="font-display text-xl text-ink mb-4">Spend by City Stop</h3>
+              <div className="divide-y divide-line">
+                {budget.by_stop?.map((st) => (
+                  <div key={st.stop_id} className="py-3 flex justify-between items-center text-sm">
+                    <div>
+                      <p className="font-semibold">{st.city}</p>
+                      <p className="text-xs text-ink/50">Stay: ₹{st.stay_cost} • Activities: ₹{st.activities_cost}</p>
+                    </div>
+                    <span className="font-bold text-clay text-base">₹{st.total}</span>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
+          </div>
+        )}
+
+        {/* TAB 3: SETTINGS */}
+        {activeTab === "settings" && (
+          <GlassCard className="p-8 max-w-xl mx-auto">
+            <h3 className="font-display text-2xl text-ink mb-6">Trip Settings</h3>
+            <form onSubmit={handleSaveTripBasics} className="flex flex-col gap-4">
+              <Input
+                label="Trip Name"
+                value={editingTripForm.name}
+                onChange={(e) => setEditingTripForm({ ...editingTripForm, name: e.target.value })}
+                required
+              />
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    label="Start Date"
+                    type="date"
+                    value={editingTripForm.start_date}
+                    onChange={(e) => setEditingTripForm({ ...editingTripForm, start_date: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    label="End Date"
+                    type="date"
+                    value={editingTripForm.end_date}
+                    onChange={(e) => setEditingTripForm({ ...editingTripForm, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Description</label>
+                <textarea
+                  value={editingTripForm.description}
+                  onChange={(e) => setEditingTripForm({ ...editingTripForm, description: e.target.value })}
+                  rows={3}
+                  className="w-full rounded-lg border border-line bg-white/60 px-4 py-2 text-ink text-sm outline-none focus:ring-2 focus:ring-clay"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-paper-deep/60">
+                <input
+                  type="checkbox"
+                  id="is_public"
+                  checked={editingTripForm.is_public}
+                  onChange={(e) => setEditingTripForm({ ...editingTripForm, is_public: e.target.checked })}
+                  className="w-4 h-4 accent-clay"
+                />
+                <label htmlFor="is_public" className="text-sm font-medium cursor-pointer">
+                  Make trip publicly viewable via share link
+                </label>
+              </div>
+
+              <Button type="submit" variant="solid" className="mt-2">
+                Save Settings
+              </Button>
+            </form>
+          </GlassCard>
+        )}
+      </main>
+
+      {/* MODAL: Add City Stop */}
+      {showAddStopModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <GlassCard className="w-full max-w-md p-6 bg-white/95 shadow-2xl">
+            <h3 className="font-display text-2xl text-ink mb-4">Add Destination Stop</h3>
+            <form onSubmit={handleAddStop} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Select City</label>
+                <select
+                  value={newStopForm.city}
+                  onChange={(e) => setNewStopForm({ ...newStopForm, city: e.target.value })}
+                  className="w-full rounded-lg border border-line bg-white px-3 py-2 text-ink text-sm outline-none"
+                  required
+                >
+                  {cities.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}, {c.country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Input
+                    label="Arrival Date"
+                    type="date"
+                    value={newStopForm.start_date}
+                    onChange={(e) => setNewStopForm({ ...newStopForm, start_date: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    label="Departure Date"
+                    type="date"
+                    value={newStopForm.end_date}
+                    onChange={(e) => setNewStopForm({ ...newStopForm, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <Input
+                label="Estimated Stay / Hotel Cost (₹)"
+                type="number"
+                min="0"
+                step="0.01"
+                value={newStopForm.stay_cost}
+                onChange={(e) => setNewStopForm({ ...newStopForm, stay_cost: e.target.value })}
+              />
+
+              <Input
+                label="Stop Notes (e.g. Hotel reservation #)"
+                value={newStopForm.notes}
+                onChange={(e) => setNewStopForm({ ...newStopForm, notes: e.target.value })}
+              />
+
+              <div className="flex justify-end gap-3 mt-4">
+                <Button type="button" variant="glass" onClick={() => setShowAddStopModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="solid">
+                  Add Stop
+                </Button>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* MODAL: Add Activity */}
+      {showAddActivityModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <GlassCard className="w-full max-w-md p-6 bg-white/95 shadow-2xl">
+            <h3 className="font-display text-2xl text-ink mb-4">Add Activity to Stop</h3>
+            <form onSubmit={handleAddActivity} className="flex flex-col gap-4">
+              {/* Optional Quick Pick from Catalog */}
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Pick from Catalog (Optional)</label>
+                <select
+                  onChange={(e) => {
+                    const act = catalogActivities.find((a) => a.id === parseInt(e.target.value, 10));
+                    if (act) {
+                      setNewActivityForm({
+                        ...newActivityForm,
+                        title: act.name,
+                        activity_type: act.activity_type || "sightseeing",
+                        cost: act.cost,
+                        activity: act.id,
+                      });
+                    }
+                  }}
+                  className="w-full rounded-lg border border-line bg-white px-3 py-2 text-ink text-sm outline-none"
+                >
+                  <option value="">-- Or type custom activity below --</option>
+                  {catalogActivities.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.city_name}) — ₹{a.cost}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                label="Activity Title"
+                value={newActivityForm.title}
+                onChange={(e) => setNewActivityForm({ ...newActivityForm, title: e.target.value })}
+                required
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1">Type</label>
+                  <select
+                    value={newActivityForm.activity_type}
+                    onChange={(e) => setNewActivityForm({ ...newActivityForm, activity_type: e.target.value })}
+                    className="w-full rounded-lg border border-line bg-white px-3 py-2 text-ink text-sm outline-none"
+                  >
+                    {ACTIVITY_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  label="Cost (₹)"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newActivityForm.cost}
+                  onChange={(e) => setNewActivityForm({ ...newActivityForm, cost: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Date (Optional)"
+                  type="date"
+                  value={newActivityForm.scheduled_date}
+                  onChange={(e) => setNewActivityForm({ ...newActivityForm, scheduled_date: e.target.value })}
+                />
+                <Input
+                  label="Time"
+                  type="time"
+                  value={newActivityForm.scheduled_time}
+                  onChange={(e) => setNewActivityForm({ ...newActivityForm, scheduled_time: e.target.value })}
+                />
+              </div>
+
+              <Input
+                label="Notes"
+                value={newActivityForm.notes}
+                onChange={(e) => setNewActivityForm({ ...newActivityForm, notes: e.target.value })}
+              />
+
+              <div className="flex justify-end gap-3 mt-4">
+                <Button type="button" variant="glass" onClick={() => setShowAddActivityModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="solid">
+                  Save Activity
+                </Button>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -25,7 +25,13 @@ export default function Navbar() {
           <span>🚀</span> Chalo Chalein
         </NavLink>
 
-        <div className="hidden sm:flex items-center gap-6">
+        <div className="hidden sm:flex items-center gap-5">
+          <NavLink to="/discover" className={linkClass}>
+            Discover
+          </NavLink>
+          <NavLink to="/analytics" className={linkClass}>
+            Analytics
+          </NavLink>
           {isAuthenticated ? (
             <>
               <NavLink to="/dashboard" className={linkClass}>
@@ -46,7 +52,7 @@ export default function Navbar() {
             </>
           ) : (
             <NavLink to="/" className={linkClass}>
-              Explore
+              Home
             </NavLink>
           )}
         </div>
@@ -86,6 +92,12 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="sm:hidden mt-2 rounded-2xl backdrop-blur-lg bg-white/30 border border-white/50 shadow-lg p-4 flex flex-col gap-3">
+          <NavLink to="/discover" className={linkClass} onClick={() => setMenuOpen(false)}>
+            Discover
+          </NavLink>
+          <NavLink to="/analytics" className={linkClass} onClick={() => setMenuOpen(false)}>
+            Analytics
+          </NavLink>
           {isAuthenticated ? (
             <>
               <NavLink to="/dashboard" className={linkClass} onClick={() => setMenuOpen(false)}>
@@ -112,6 +124,9 @@ export default function Navbar() {
             </>
           ) : (
             <>
+              <NavLink to="/" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Home
+              </NavLink>
               <NavLink to="/login" className={linkClass} onClick={() => setMenuOpen(false)}>
                 Log in
               </NavLink>
