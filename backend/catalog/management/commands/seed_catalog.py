@@ -77,6 +77,71 @@ class Command(BaseCommand):
                     {"name": "City Palace Museum Tour", "activity_type": "culture", "cost": 400.00, "duration_hours": 3.0, "description": "Rajasthan's largest palace complex with stunning peacock courtyards."},
                     {"name": "Rooftop Candlelight Dinner", "activity_type": "food", "cost": 2500.00, "duration_hours": 2.5, "description": "Romantic lake-view dining with traditional Mewari dishes."}
                 ]
+            },
+            {
+                "name": "Leh-Ladakh",
+                "country": "India",
+                "cost_index": 4,
+                "popularity": 96,
+                "image_url": "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?auto=format&fit=crop&w=800&q=80",
+                "description": "The land of high mountain passes, pristine azure lakes, and dramatic lunar landscapes.",
+                "activities": [
+                    {"name": "Pangong Tso Lake Camping", "activity_type": "adventure", "cost": 3500.00, "duration_hours": 12.0, "description": "Overnight lakeside tent stay under the Milky Way."},
+                    {"name": "Nubra Valley Camel Safari & Sand Dunes", "activity_type": "sightseeing", "cost": 1500.00, "duration_hours": 4.0, "description": "Ride double-humped Bactrian camels in Hunder sand dunes."},
+                    {"name": "Thiksey Monastery Morning Prayer", "activity_type": "culture", "cost": 200.00, "duration_hours": 2.0, "description": "Experience serene chanting monks in a 12-storey hilltop monastery."}
+                ]
+            },
+            {
+                "name": "Munnar",
+                "country": "India",
+                "cost_index": 2,
+                "popularity": 89,
+                "image_url": "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80",
+                "description": "God's Own Country hill station famous for rolling emerald tea plantations and misty mountains.",
+                "activities": [
+                    {"name": "Kolukkumalai Sunrise Jeep Safari", "activity_type": "adventure", "cost": 2200.00, "duration_hours": 4.5, "description": "Catch cloud-bed sunrise at the world's highest organic tea estate."},
+                    {"name": "Tea Museum & Tasting Tour", "activity_type": "food", "cost": 450.00, "duration_hours": 2.0, "description": "Learn the artisanal process of tea making with fresh brew tasting."},
+                    {"name": "Eravikulam National Park Trek", "activity_type": "sightseeing", "cost": 300.00, "duration_hours": 3.0, "description": "Spot endangered Nilgiri Tahr against rolling shola grasslands."}
+                ]
+            },
+            {
+                "name": "Rishikesh",
+                "country": "India",
+                "cost_index": 2,
+                "popularity": 94,
+                "image_url": "https://images.unsplash.com/photo-1600100397608-f010f4439c3e?auto=format&fit=crop&w=800&q=80",
+                "description": "Yoga capital of the world and white-water river rafting hub nestled along the foothills of Himalayas.",
+                "activities": [
+                    {"name": "Ganga White Water Rafting (16km)", "activity_type": "adventure", "cost": 1200.00, "duration_hours": 3.5, "description": "Tackle thrilling Grade III rapids including Roller Coaster and Golf Course."},
+                    {"name": "Beatles Ashram Exploration", "activity_type": "culture", "cost": 300.00, "duration_hours": 2.5, "description": "Walk through psychedelic graffiti meditation huts where The Beatles composed music."},
+                    {"name": "Triveni Ghat Evening Maha Aarti", "activity_type": "culture", "cost": 0.00, "duration_hours": 1.5, "description": "Soulful riverside prayer with oil lamps floating on the Holy Ganges."}
+                ]
+            },
+            {
+                "name": "Agra",
+                "country": "India",
+                "cost_index": 2,
+                "popularity": 97,
+                "image_url": "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80",
+                "description": "Home of the iconic Taj Mahal and grand Mughal architectural wonders on the banks of Yamuna.",
+                "activities": [
+                    {"name": "Sunrise Taj Mahal Guided Tour", "activity_type": "culture", "cost": 1100.00, "duration_hours": 3.0, "description": "Marvel at the marble monument of love in morning golden light."},
+                    {"name": "Agra Fort Heritage Walk", "activity_type": "sightseeing", "cost": 650.00, "duration_hours": 2.5, "description": "Massive red sandstone fort residence of Mughal Emperors."},
+                    {"name": "Petha & Mughal Street Food Crawl", "activity_type": "food", "cost": 400.00, "duration_hours": 2.0, "description": "Sample original Agra petha varieties and legendary Mughlai delicacies."}
+                ]
+            },
+            {
+                "name": "Amritsar",
+                "country": "India",
+                "cost_index": 1,
+                "popularity": 91,
+                "image_url": "https://images.unsplash.com/photo-1588096344356-9b497b78f0b7?auto=format&fit=crop&w=800&q=80",
+                "description": "Spiritual capital of Sikhism, revered for the Golden Temple and legendary culinary heritage.",
+                "activities": [
+                    {"name": "Golden Temple & Langar Experience", "activity_type": "culture", "cost": 0.00, "duration_hours": 3.0, "description": "Peaceful meditation by the holy Amrit Sarovar and community meal."},
+                    {"name": "Attari-Wagah Border Beating Retreat Ceremony", "activity_type": "sightseeing", "cost": 500.00, "duration_hours": 4.0, "description": "High-octane patriotic military drill and flag lowering ceremony."},
+                    {"name": "Authentic Kulcha & Lassi Breakfast Trail", "activity_type": "food", "cost": 300.00, "duration_hours": 2.0, "description": "Crispy butter-drenched stuffed Amritsari kulchas with creamy malai lassi."}
+                ]
             }
         ]
 
