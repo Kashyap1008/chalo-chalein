@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 
 from .models import Trip, Stop, TripActivity
 from .serializers import (
@@ -54,7 +55,64 @@ class PublicTripView(generics.RetrieveAPIView):
     lookup_field = 'share_code'
 
     def get_queryset(self):
-        return Trip.objects.filter(is_public=True)
+        return Trip.objects.all()
+
+
+class TripCloneView(APIView):
+    """Duplicate a trip under current authenticated user."""
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        source_trip = get_object_or_404(Trip, id=pk)
+        with transaction.atomic():
+            new_trip = Trip.objects.create(
+                owner=request.user,
+                name=f"Copy of {source_trip.name}",
+                description=source_trip.description,
+                start_date=source_trip.start_date,
+                end_date=source_trip.end_date,
+                cover_photo=source_trip.cover_photo,
+                is_public=False
+            )
+
+            for stop in source_trip.stops.all():
+                new_stop = Stop.objects.create(
+                    trip=new_trip,
+                    city=stop.city,
+                    start_date=stop.start_date,
+                    end_date=stop.end_date,
+                    stay_cost=stop.stay_cost,
+                    order=stop.order,
+                    notes=stop.notes
+                )
+                for act in stop.trip_activities.all():
+                    TripActivity.objects.create(
+                        stop=new_stop,
+                        activity=act.activity,
+                        title=act.title,
+                        activity_type=act.activity_type,
+                        scheduled_date=act.scheduled_date,
+                        scheduled_time=act.scheduled_time,
+                        cost=act.cost,
+                        notes=act.notes
+                    )
+
+        serializer = TripDetailSerializer(new_trip)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TripReorderStopsView(APIView):
+    """Reorder stops for a trip."""
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, pk):
+        trip = get_object_or_404(Trip, id=pk, owner=request.user)
+        stop_ids = request.data.get('stop_ids', [])
+        with transaction.atomic():
+            for idx, stop_id in enumerate(stop_ids, start=1):
+                Stop.objects.filter(id=stop_id, trip=trip).update(order=idx)
+        serializer = TripDetailSerializer(trip)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # ─────────────────────────────────────────────
