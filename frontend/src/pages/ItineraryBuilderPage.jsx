@@ -173,6 +173,10 @@ const ItineraryBuilderPage = () => {
   const inputClass = (field) => `mt-2 w-full rounded-xl border bg-slate-950/70 px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400 ${errors[field] ? 'border-rose-400' : 'border-slate-700'}`;
   const activeDayPlan = days.find((day) => day.id === activeDay) || days[0];
 
+  const completedBasics = [trip.name.trim(), trip.destination.trim(), trip.startDate, trip.endDate].filter(Boolean).length;
+  const hasValidDates = trip.startDate && trip.endDate && trip.endDate >= trip.startDate;
+  const readiness = hasValidDates && completedBasics === 4 ? 'Ready to save' : 'Needs a quick check';
+
   const currentShareUrl = window.location.origin + (savedTripId ? `/share/${savedTripId}` : '/share/demo');
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentShareUrl)}&bgcolor=0f172a&color=38bdf8`;
 
@@ -195,6 +199,11 @@ const ItineraryBuilderPage = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <div className={`rounded-xl border px-4 py-2.5 text-xs font-bold ${readiness === 'Ready to save' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}>
+              <span className="mr-1.5">{readiness === 'Ready to save' ? '✓' : '!'}</span>
+              {readiness}
+            </div>
+
             {/* Currency Toggle */}
             <div className="flex rounded-xl border border-slate-700 bg-slate-950 p-1">
               <button
