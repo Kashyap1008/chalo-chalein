@@ -181,7 +181,7 @@ const ItineraryBuilderPage = () => {
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentShareUrl)}&bgcolor=0f172a&color=38bdf8`;
 
   return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-8 text-white sm:px-6 lg:px-10">
+    <main className="min-h-screen bg-[#f7f8f6] px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-7xl">
         
         {/* Header Bar */}
@@ -193,13 +193,13 @@ const ItineraryBuilderPage = () => {
             <h1 className="max-w-2xl text-3xl font-black tracking-tight sm:text-5xl bg-gradient-to-r from-white via-slate-100 to-cyan-200 bg-clip-text text-transparent">
               Build a trip that feels like you.
             </h1>
-            <p className="mt-3 max-w-xl text-sm text-slate-400">
+            <p className="mt-3 max-w-xl text-sm text-slate-600">
               Plan stops, schedule activities, and track per-person costs with real-time budget splitting.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`rounded-xl border px-4 py-2.5 text-xs font-bold ${readiness === 'Ready to save' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}>
+            <div className={`rounded-xl border px-4 py-2.5 text-xs font-bold ${readiness === 'Ready to save' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
               <span className="mr-1.5">{readiness === 'Ready to save' ? '✓' : '!'}</span>
               {readiness}
             </div>
@@ -250,7 +250,7 @@ const ItineraryBuilderPage = () => {
 
         {/* QR Code Popover */}
         {showQR && (
-          <div className="mb-6 inline-flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-slate-950/90 p-5 shadow-2xl backdrop-blur-xl">
+          <div className="mb-6 inline-flex flex-col items-center rounded-2xl border border-cyan-200 bg-white p-5 shadow-xl backdrop-blur-xl">
             <p className="mb-2 text-xs font-semibold text-slate-300">Scan to view live itinerary on mobile</p>
             <img src={qrCodeUrl} alt="Trip QR Code" className="h-36 w-36 rounded-lg border border-slate-800 p-1 bg-slate-900" />
             <p className="mt-2 text-[10px] text-cyan-400">Live sync enabled</p>
@@ -263,7 +263,7 @@ const ItineraryBuilderPage = () => {
           <section className="space-y-6">
             
             {/* Trip Basics Card */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7 backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 backdrop-blur-md">
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">01 / Trip basics</p>
@@ -295,7 +295,7 @@ const ItineraryBuilderPage = () => {
               </div>
 
               {/* Group Size Split Slider */}
-              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-cyan-400 font-bold">Group Travel Party</p>
                   <p className="mt-1 font-semibold text-slate-200">{trip.travelers} {trip.travelers === 1 ? 'Traveler (Solo)' : 'Travelers (Group Split)'}</p>
@@ -308,7 +308,7 @@ const ItineraryBuilderPage = () => {
             </div>
 
             {/* Daily Rhythm / Itinerary Schedule */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-5 sm:p-7 backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 backdrop-blur-md">
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">02 / Daily rhythm</p>
@@ -330,7 +330,7 @@ const ItineraryBuilderPage = () => {
                     type="button"
                     key={day.id}
                     onClick={() => setActiveDay(day.id)}
-                    className={`min-w-28 rounded-xl border px-3 py-2 text-left transition ${activeDay === day.id ? 'border-cyan-400 bg-cyan-400/10' : 'border-slate-800 bg-slate-950/50 hover:border-slate-600'}`}
+                    className={`min-w-28 rounded-xl border px-3 py-2 text-left transition ${activeDay === day.id ? 'border-cyan-400 bg-cyan-50' : 'border-slate-200 bg-slate-50 hover:border-slate-300'}`}
                   >
                     <span className="block text-xs text-slate-500">Day {day.id}</span>
                     <span className="mt-1 block text-sm font-semibold">{formatDate(day.date)}</span>
@@ -340,7 +340,7 @@ const ItineraryBuilderPage = () => {
 
               {/* Timeline View */}
               {viewMode === 'timeline' && activeDayPlan && (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="mb-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold">{activeDayPlan.label}</h3>
@@ -381,7 +381,7 @@ const ItineraryBuilderPage = () => {
               {viewMode === 'calendar' && (
                 <div className="grid gap-3 md:grid-cols-2">
                   {days.map((day) => (
-                    <button type="button" key={day.id} onClick={() => { setActiveDay(day.id); setViewMode('timeline'); }} className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 text-left transition hover:border-cyan-400/70">
+                    <button type="button" key={day.id} onClick={() => { setActiveDay(day.id); setViewMode('timeline'); }} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-cyan-400/70">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Day {day.id}</p>
@@ -413,16 +413,16 @@ const ItineraryBuilderPage = () => {
           <aside className="space-y-6">
             
             {/* Destination Snapshot */}
-            <div className="overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/15 via-slate-900 to-slate-900 p-6 backdrop-blur-md">
+            <div className="overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-6 shadow-sm backdrop-blur-md">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">Trip snapshot</p>
               <h2 className="mt-3 text-2xl font-black">{trip.destination || 'Your Destination'}</h2>
               <p className="mt-2 text-sm text-slate-400">{formatDate(trip.startDate)} — {formatDate(trip.endDate)}</p>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-slate-950/60 p-3">
+                <div className="rounded-xl bg-white p-3 shadow-sm">
                   <p className="text-xs text-slate-500">Total Stops</p>
                   <p className="mt-1 text-xl font-bold">{days.reduce((sum, day) => sum + day.activities.length, 0)}</p>
                 </div>
-                <div className="rounded-xl bg-slate-950/60 p-3">
+                <div className="rounded-xl bg-white p-3 shadow-sm">
                   <p className="text-xs text-slate-500">Party Size</p>
                   <p className="mt-1 text-xl font-bold text-cyan-300">{trip.travelers} travelers</p>
                 </div>
@@ -430,7 +430,7 @@ const ItineraryBuilderPage = () => {
             </div>
 
             {/* Split Budget Pulse Card */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 backdrop-blur-md">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">Budget Pulse</h2>
                 <span className="text-xs font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-full">

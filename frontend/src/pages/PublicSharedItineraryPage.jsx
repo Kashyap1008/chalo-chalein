@@ -104,18 +104,18 @@ const PublicSharedItineraryPage = () => {
   const stopsCount = tripData?.stops?.length || 3;
 
   return (
-    <main className="min-h-screen bg-[#07111f] px-4 py-8 text-white sm:px-6 lg:px-10">
+    <main className="min-h-screen bg-[#f7f8f6] px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-5xl">
         
         {/* Hero Card */}
-        <div className="relative overflow-hidden rounded-[2.5rem] border border-sky-400/25 bg-gradient-to-br from-sky-500/20 via-slate-900 to-indigo-500/10 p-7 sm:p-10 shadow-2xl backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-sky-200 bg-gradient-to-br from-sky-100 via-white to-indigo-50 p-7 shadow-xl shadow-slate-200/70 backdrop-blur-xl sm:p-10">
           <div className="absolute -right-10 -top-10 text-[10rem] font-black leading-none text-white/5 select-none">✦</div>
           
           <div className="relative z-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping" />
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-sky-300">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-sky-700">
                   Shared Itinerary · {shareId || 'CHALO-DEMO'}
                 </p>
               </div>
@@ -170,28 +170,28 @@ const PublicSharedItineraryPage = () => {
             <h1 className="mt-7 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-r from-white via-slate-100 to-sky-200 bg-clip-text text-transparent">
               {tripTitle}
             </h1>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
               {tripDesc}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2.5 text-xs font-medium text-slate-300">
-              <span className="rounded-full border border-slate-700/60 bg-slate-950/60 px-3 py-1.5">📍 {stopsCount} Planned Cities</span>
-              <span className="rounded-full border border-slate-700/60 bg-slate-950/60 px-3 py-1.5">🗓️ Multi-Day Journey</span>
-              <span className="rounded-full border border-slate-700/60 bg-slate-950/60 px-3 py-1.5">👥 {travelers} Travelers</span>
+              <span className="rounded-full border border-sky-200 bg-white/80 px-3 py-1.5 text-slate-700 shadow-sm">📍 {stopsCount} Planned Cities</span>
+              <span className="rounded-full border border-sky-200 bg-white/80 px-3 py-1.5 text-slate-700 shadow-sm">🗓️ Multi-Day Journey</span>
+              <span className="rounded-full border border-sky-200 bg-white/80 px-3 py-1.5 text-slate-700 shadow-sm">👥 {travelers} Travelers</span>
             </div>
           </div>
         </div>
 
         {/* Quick Stats & Split Budget Calculator */}
         <div className="my-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-lg">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm backdrop-blur-lg">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Total Itinerary Spend</p>
             <p className="mt-2 text-3xl font-black text-white">₹{totalSpend.toLocaleString('en-IN')}</p>
             <p className="mt-1 text-xs text-slate-400">Includes stay + curated activities</p>
           </div>
 
           {/* Group Split Toggle */}
-          <div className="rounded-3xl border border-sky-500/30 bg-gradient-to-br from-sky-950/30 to-slate-900/60 p-5 backdrop-blur-lg">
+          <div className="rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm backdrop-blur-lg">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-sky-400">Split By Group</p>
               <div className="flex gap-1 bg-slate-950/60 p-1 rounded-lg border border-slate-800">
@@ -218,7 +218,7 @@ const PublicSharedItineraryPage = () => {
             <p className="mt-1 text-xs text-slate-400">For a {travelers}-traveler group</p>
           </div>
 
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-lg">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm backdrop-blur-lg">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Daily Average</p>
             <p className="mt-2 text-3xl font-black text-indigo-300">
               ₹{Math.round(totalSpend / (budgetData?.trip_days || 3)).toLocaleString('en-IN')}
@@ -236,7 +236,7 @@ const PublicSharedItineraryPage = () => {
 
           {tripData?.stops && tripData.stops.length > 0 ? (
             tripData.stops.map((stop, sIndex) => (
-              <section key={stop.id || sIndex} className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-6 sm:p-8 backdrop-blur-xl shadow-lg hover:border-slate-700 transition">
+              <section key={stop.id || sIndex} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 backdrop-blur-xl hover:border-sky-300 transition">
                 <div className="flex flex-col gap-2 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <span className="rounded-full bg-sky-500/10 border border-sky-400/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-sky-300">
@@ -283,7 +283,7 @@ const PublicSharedItineraryPage = () => {
             ))
           ) : (
             demoDays.map((day) => (
-              <section key={day.day} className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-6 sm:p-8 backdrop-blur-xl shadow-lg">
+              <section key={day.day} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 backdrop-blur-xl">
                 <div className="flex flex-col gap-2 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <span className="rounded-full bg-sky-500/10 border border-sky-400/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-sky-300">
